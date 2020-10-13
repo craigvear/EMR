@@ -4,7 +4,7 @@ import pandas as pd
 from numpy import reshape, array
 from time import sleep
 import os
-#from jetbot import Robot
+from jetbot import Robot
 
 # load models from single files
 BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_body_full-dataset_200epochs-3in-3out_model.h5'
@@ -34,7 +34,7 @@ def robot_move(pred_x, pred_y):
     right_wheel_move += pred_y
     left_wheel_move += pred_y
     print(left_wheel_move, right_wheel_move)
-    #robot.set_motors(left_wheel_move, right_wheel_move)
+    robot.set_motors(left_wheel_move, right_wheel_move)
 
 
 df = pd.read_csv(test_dataset_path, sep=",", header=None, names=["id", "limb", "x", "y", "z", "freq", "amp"])
@@ -45,7 +45,7 @@ shuffle(index)
 df = df.iloc[index]
 df.reset_index()
 
-# robot = Robot()
+#robot = Robot()
 
 # iterate through each row
 for ind in df.index:
