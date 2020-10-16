@@ -3,7 +3,7 @@ from random import shuffle, randrange
 import pandas as pd
 from numpy import reshape, array
 from time import sleep, time
-# from jetbot import Robot
+from jetbot import Robot
 from threading import Thread, Lock, Event
 
 from pydub import AudioSegment
@@ -93,7 +93,7 @@ def robot_move(pred_x, pred_y):
     right_wheel_move += pred_y
     left_wheel_move += pred_y
     print(left_wheel_move, right_wheel_move)
-    # robot.set_motors(left_wheel_move, right_wheel_move)
+    robot.set_motors(left_wheel_move, right_wheel_move)
 
 # A thread that consumes data
 def consumer(in_q):
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     user_dur = 3 # minutes
     # instantiate the objects
     play_lock = Lock()
-    # robot = Robot()
+    robot = Robot()
     running = True
 # todo multiple workers https://pythonprogramming.net/threading-tutorial-python/
 
@@ -137,6 +137,7 @@ if __name__ == "__main__":
     t2.start()
     t3.start()
     t4.start()
+
 
     # Wait for all produced items to be consumed
     q.join()
