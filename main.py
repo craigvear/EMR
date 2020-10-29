@@ -19,7 +19,7 @@ BODY_model = load_model(BODY_model_path)
 test_dataset_path = 'training/good_dataset_mini.csv'
 
 # audio source variables
-audio_file = ('data/keith_jarrett_solo_concert_tokyo_1984.wav')
+audio_file = ('data/jarrett_snippet.wav')
 audio = AudioSegment.from_wav(audio_file)
 audio_len = audio.duration_seconds
 
