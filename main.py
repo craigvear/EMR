@@ -1,4 +1,4 @@
-# thanks to # todo multiple workers https://pythonprogramming.net/threading-tutorial-python/
+# thanks to
 from keras.models import load_model
 from random import shuffle, randrange
 import pandas as pd
