@@ -7,13 +7,15 @@ https://medium.com/analytics-vidhya/weather-forecasting-with-recurrent-neural-ne
 """
 
 # 1. load all modules and libraries
-from keras.models import Sequential
-from keras.layers import Bidirectional
-from keras.layers import Dense
-from keras.layers import LSTM, Dropout
+import tensorflow as tf
+# from keras.models import Sequential
+# from keras.layers import Bidirectional
+# from keras.layers import Dense
+# from keras.layers import LSTM, Dropout
 import numpy as np
 from pandas import read_csv
 from random import randrange
+
 
 # 2. establish the data sets and numeric environment
 # fix random seed for reproducibility
@@ -81,16 +83,16 @@ testX, testY = create_dataset(test, n_future, n_past)
 # testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 
 # 5. create and fit the LSTM network
-model = Sequential()
-model.add(Bidirectional(LSTM(64, return_sequences=True), input_shape=(trainX.shape[1], 1))) # input shape is 5 timesteps, 1-3d feature
-model.add(Dropout(0.2))
-model.add(LSTM(64, return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(64, return_sequences=True))  # returns a sequence of vectors of dimension
-model.add(Dropout(0.2))
-model.add(LSTM(64))
-model.add(Dropout(0.2))
-model.add(Dense(units=3)) # how many outputs as predictions
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True), input_shape=(trainX.shape[1], 1))) # input shape is 5 timesteps, 1-3d feature
+model.add(tf.keras.layers.Dropout(0.2))
+model.add(tf.keras.layers.LSTM(64, return_sequences=True))
+model.add(tf.keras.layers.Dropout(0.2))
+model.add(tf.keras.layers.LSTM(64, return_sequences=True))  # returns a sequence of vectors of dimension
+model.add(tf.keras.layers.Dropout(0.2))
+model.add(tf.keras.layers.LSTM(64))
+model.add(tf.keras.layers.Dropout(0.2))
+model.add(tf.keras.layers.Dense(units=3)) # how many outputs as predictions
 
 model.compile(loss='mean_squared_error', optimizer='adam', metrics='accuracy')
 model.fit(trainX, trainY, epochs=1000, batch_size=32, verbose=1)
