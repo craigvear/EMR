@@ -1,4 +1,5 @@
-from keras.models import load_model
+import tensorflow as tf
+
 from random import shuffle, randrange
 import pandas as pd
 from numpy import reshape, array
@@ -15,7 +16,7 @@ from random import random, randrange
 # load models from single files
 # set up global variables
 BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-3in-3out_model.h5'
-BODY_model = load_model(BODY_model_path)
+BODY_model = tf.keras.models.load_model(BODY_model_path)
 test_dataset_path = 'training/good_dataset_mini.csv'
 
 # audio source variables
@@ -39,17 +40,19 @@ df.reset_index()
 def producer_data():
     dur = what_is_duration()
     seed = choose_incoming_df()
-    pred_x, pred_y = ml_predictions(seed)
-    return (dur, pred_x, pred_y)
+
+    # get predictions. x & y for wheel movement, z for duration variability
+    pred_x, pred_y, pred_z = ml_predictions(seed)
+    return (dur, pred_x, pred_y, pred_z)
 
 # functions producing data
 def ml_predictions(features): # RNN predict x, y, z
     row = array(features)
     inputX = reshape(row, (row.shape[0], row.shape[1], 1))
     pred = BODY_model.predict(inputX, verbose=0)
-    pred_x, pred_y = pred[0,0], pred [0,1] # only want x and y at this stage
+    pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2] # only want x and y at this stage
     # print('prediction RNN = ', pred)
-    return pred_x, pred_y
+    return pred_x, pred_y, pred_z
 
 def what_is_duration(): # of the sound/movment event
     dur_rnd = random()
@@ -65,8 +68,8 @@ def choose_incoming_df(): # randomly find a row and use as seed
 def consumer(incoming_data):
     # Get some data
     ((packed_data, evt)) = incoming_data
-    (dur, pred_x, pred_y) = data
-    start_pos = start_position(dur)
+    (dur, pred_x, pred_y, pred_z) = data
+    start_pos = start_position(dur, pred_z)
 
     with play_lock:
         # Process the data
@@ -76,9 +79,9 @@ def consumer(incoming_data):
     # indicate completion
     evt.set()
 
-def start_position(dur):
+def start_position(dur, pred_z):
     poss_length = int((audio_len - (dur)) * 1000)
-    rnd_length_ms = randrange(poss_length)
+    rnd_length_ms = randrange(poss_length) * pred_z
     return rnd_length_ms / 1000
 
 def play_sound(start_pos, dur):
