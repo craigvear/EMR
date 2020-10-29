@@ -4,6 +4,10 @@ from random import random, randrange
 from time import sleep, time
 import ML_robot_move
 
+# todo sort threader and queue out in ML-robot_move
+# todo move threading to main
+# todo create dataset using creative AI computer
+
 play_lock = Lock()
 
 # The threader thread pulls an worker from the queue and processes it
@@ -13,7 +17,7 @@ def get_threader():
         worker = q_get.get()
 
         # Run the example job with the avail worker in queue (thread)
-        ML_robot_move.ml_predictions(worker)
+        #ML_robot_move.ml_predictions(worker)
 
         # completed with the job
         q_get.task_done()

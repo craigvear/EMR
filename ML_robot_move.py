@@ -1,13 +1,14 @@
+# thanks to # todo multiple workers https://pythonprogramming.net/threading-tutorial-python/
 from keras.models import load_model
 from random import shuffle, randrange
 import pandas as pd
 from numpy import reshape, array
 from time import sleep, time
-from jetbot import Robot
+# from jetbot import Robot
 from threading import Thread, Lock, Event
 
 from pydub import AudioSegment
-from pydub.playback import play
+from pydub.playback import _play_with_simpleaudio as play
 import glob
 from queue import Queue
 from random import random, randrange
@@ -19,10 +20,11 @@ BODY_model = load_model(BODY_model_path)
 test_dataset_path = 'training/good_dataset_mini.csv'
 
 # audio source variables
-my_audio_file = ('data/bill_evans_intro.wav')
-audio = AudioSegment.from_wav(my_audio_file)
+audio_file = ('data/bill_evans_intro.wav')
+audio = AudioSegment.from_wav(audio_file)
 audio_len = audio.duration_seconds
-print (f'length of audio = {audio_len} seconds')
+
+
 
 # defines the readable dataset, shuffles it, then resets index
 df = pd.read_csv(test_dataset_path, sep=",", header=None, names=["id", "limb", "x", "y", "z", "freq", "amp"])
@@ -34,6 +36,16 @@ shuffle(index)
 df = df.iloc[index]
 df.reset_index()
 
+# A thread that produces data list
+def producer_data():
+    dur = what_is_duration()
+    seed = choose_incoming_df()
+    pred_x, pred_y = ml_predictions(seed)
+
+    # Make an (data, event) list and hand it to the consumer
+    # evt = Event()
+    return (dur, pred_x, pred_y)
+
 # functions producing data
 def ml_predictions(features): # RNN predict x, y, z
     row = array(features)
@@ -41,7 +53,7 @@ def ml_predictions(features): # RNN predict x, y, z
     pred = BODY_model.predict(inputX, verbose=0)
     pred_x, pred_y = pred[0,0], pred [0,1] # only want x and y at this stage
     # print('prediction RNN = ', pred)
-    return (pred_x, pred_y)
+    return pred_x, pred_y
 
 def what_is_duration(): # of the sound/movment event
     dur_rnd = random() * 2
@@ -52,21 +64,17 @@ def choose_incoming_df(): # randomly find a row and use as seed
     seed = [[df['x'][ind], df['y'][ind], df['z'][ind]]]
     return seed
 
-# A thread that produces data list
-def producer_data(out_q):
-    while running:
-        dur = what_is_duration()
-        seed = choose_incoming_df()
-        pred_x, pred_y = ml_predictions(seed)
+# thread that consumes data
+def consumer(data):
+    # Get some data
+    (dur, pred_x, pred_y) = data
+    start_pos = start_position(dur)
 
-        # Make an (data, event) list and hand it to the consumer
-        evt = Event()
-        out_q.put((dur, seed, pred_x, pred_y, evt))
+    with play_lock:
+        # Process the data
+        play_sound(start_pos, dur)  # in seconds!!!
+        robot_move(pred_x, pred_y)
 
-        # Wait for the consumer to process the item
-        evt.wait()
-
-# functions that consume data
 def start_position(dur):
     poss_length = int((audio_len - (dur * 2)) * 1000)
     rnd_length_ms = randrange(poss_length)
@@ -76,8 +84,10 @@ def play_sound(start_pos, dur):
     start_pos_ms = start_pos * 1000
     dur_ms = dur * 1000
     end_pos_ms = start_pos_ms + dur_ms
-    audio_slice = audio[start_pos_ms : end_pos_ms]
+    audio_slice = audio[start_pos_ms: end_pos_ms]
+
     play(audio_slice)
+    sleep(dur-0.02)
 
 def robot_move(pred_x, pred_y):
     multi_factor = 1
@@ -93,51 +103,46 @@ def robot_move(pred_x, pred_y):
     right_wheel_move += pred_y
     left_wheel_move += pred_y
     print(left_wheel_move, right_wheel_move)
-    robot.set_motors(left_wheel_move, right_wheel_move)
+    # robot.set_motors(left_wheel_move, right_wheel_move)
 
-# A thread that consumes data
-def consumer(in_q):
+
+def threader():
     while True:
-        # Get some data
-        dur, seed, pred_x, pred_y, evt = in_q.get()
-        start_pos = start_position(dur)
+        # gets an worker from the queue
+        data = q.get()
 
-        # Process the data
-        robot_move(pred_x, pred_y)
-        play_sound(start_pos, dur) # in seconds!!!
+        # Run the example job with the avail worker in queue (thread)
+        consumer(data)
 
-        # Indicate completion
-        evt.set()
+        # completed with the job
+        q.task_done()
+
 
 if __name__ == "__main__":
 
-    #user_dur = input("duration  ? ")
-    user_dur = 3 # minutes
     # instantiate the objects
     play_lock = Lock()
-    robot = Robot()
-    running = True
-# todo multiple workers https://pythonprogramming.net/threading-tutorial-python/
+    # robot = Robot()
 
     # Create the shared queue and launch both threads
     q = Queue()
-    worker_q = Queue()
 
-    now_time = time()
-    perf_dur = now_time + user_dur
+    # how many threads are we going to allow for
+    for x in range(10):
+        t1 = Thread(target=threader)
 
-    # while time() < perf_dur:
+        # classifying as a daemon, so they will die when the main dies
+        t1.daemon = True
 
-    t1 = Thread(target=consumer, args=(q,))
-    t2 = Thread(target=consumer, args=(q,))
-    t3 = Thread(target=consumer, args=(q,))
-    t4 = Thread(target=producer_data, args=(q,))
+        # begins, must come after daemon definition
+        t1.start()
 
-    t1.start()
-    t2.start()
-    t3.start()
-    t4.start()
+    # 10 jobs assigned.
+    while True:
+        for worker in range(10):
+            data = producer_data()
+            q.put(data)
+            print (worker)
 
-
-    # Wait for all produced items to be consumed
+    # wait until the thread terminates.
     q.join()
