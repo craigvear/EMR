@@ -1,4 +1,3 @@
-# thanks to
 from keras.models import load_model
 from random import shuffle, randrange
 import pandas as pd
@@ -20,7 +19,7 @@ BODY_model = load_model(BODY_model_path)
 test_dataset_path = 'training/good_dataset_mini.csv'
 
 # audio source variables
-audio_file = ('data/bill_evans_intro.wav')
+audio_file = ('data/keith_jarrett_solo_concert_tokyo_1984.wav')
 audio = AudioSegment.from_wav(audio_file)
 audio_len = audio.duration_seconds
 
@@ -53,8 +52,9 @@ def ml_predictions(features): # RNN predict x, y, z
     return pred_x, pred_y
 
 def what_is_duration(): # of the sound/movment event
-    dur_rnd = random() * 2
-    return dur_rnd
+    dur_rnd = random()
+    rnd_div = randrange(20)
+    return (dur_rnd / (rnd_div + 1)) + 0.03
 
 def choose_incoming_df(): # randomly find a row and use as seed
     ind = randrange(index_len)
@@ -77,7 +77,7 @@ def consumer(incoming_data):
     evt.set()
 
 def start_position(dur):
-    poss_length = int((audio_len - (dur * 2)) * 1000)
+    poss_length = int((audio_len - (dur)) * 1000)
     rnd_length_ms = randrange(poss_length)
     return rnd_length_ms / 1000
 
@@ -120,9 +120,9 @@ def threader():
 
 if __name__ == "__main__":
     # get the length of the improv
-    length = input('What length?   (in minutes e.g. 2.5')
+    length = input('What length?   (in whole minutes e.g. 2) ___ ')
     time_now = time()
-    end_time = time_now + (length * 60)
+    end_time = time_now + (int(length) * 60)
 
     # instantiate the objects
     play_lock = Lock()
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     q = Queue()
 
     # how many threads are we going to allow for
-    for x in range(10):
+    for x in range(3):
         t1 = Thread(target=threader)
 
         # classifying as a daemon, so they will die when the main dies
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     # 10 jobs assigned.
     while time() < end_time:
-        for worker in range(10):
+        for worker in range(3):
             evt = Event()
             # produce some data
             data = producer_data()
