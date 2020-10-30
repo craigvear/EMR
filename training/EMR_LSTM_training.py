@@ -81,7 +81,7 @@ testX, testY = create_dataset(test, n_future, n_past)
 
 # 5. create and fit the LSTM network
 model = tf.keras.models.Sequential()
-metrics = tf.keras.metrics.Accuracy(name='accuracy', dtype=None)
+# metrics = tf.keras.metrics.Accuracy(name='accuracy', dtype=None)
 
 model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True), input_shape=(trainX.shape[1], 1))) # input shape is 5 timesteps, 1-3d feature
 model.add(tf.keras.layers.Dropout(0.2))
@@ -93,7 +93,7 @@ model.add(tf.keras.layers.LSTM(64))
 model.add(tf.keras.layers.Dropout(0.2))
 model.add(tf.keras.layers.Dense(units=3)) # how many outputs as predictions
 
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=metrics)
+model.compile(optimizer=tf.keras.optimizers.Adam(0.0001), loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True), metrics=tf.keras.metrics.Accuracy(name='accuracy', dtype=None))
 model.fit(trainX, trainY, epochs=1000, batch_size=32, verbose=1)
 
 model.save('LSTM_Bidirectional_64x4_no_lookback_1000epochs-3in-3out_model.h5')
