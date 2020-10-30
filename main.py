@@ -15,7 +15,7 @@ from random import random, randrange
 
 # load models from single files
 # set up global variables
-BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-3in-3out_model.h5'
+BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_1000epochs-3in-3out_model.h5'
 BODY_model = tf.keras.models.load_model(BODY_model_path)
 test_dataset_path = 'training/good_dataset_mini.csv'
 

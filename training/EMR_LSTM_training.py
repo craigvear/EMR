@@ -94,7 +94,7 @@ model.add(tf.keras.layers.Dropout(0.2))
 model.add(tf.keras.layers.Dense(units=3)) # how many outputs as predictions
 
 model.compile(optimizer=tf.keras.optimizers.Adam(0.0001), loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True), metrics=tf.keras.metrics.Accuracy(name='accuracy', dtype=None))
-model.fit(trainX, trainY, epochs=1000, batch_size=32, verbose=1)
+model.fit(trainX, trainY, epochs=200, batch_size=32, verbose=1)
 
 model.save('LSTM_Bidirectional_64x4_no_lookback_1000epochs-3in-3out_model.h5')
 print ('saved')
