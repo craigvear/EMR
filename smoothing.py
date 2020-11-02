@@ -10,26 +10,36 @@ class Smoother(): # smooths the data as a thread class
         print("Smoothing, baby")
 
     def smooth(self, smoothing_dur, bang_timer, end_time):
-        # increments
-        num_increments = int(smoothing_dur/bang_timer)
+        # slide between them at bang_timer ms per step
 
-        # current wheel value
-        current_value_left = config.left_wheel_move
-        current_value_right = config.right_wheel_move
-
-        # new mixed value
-        new_value_left = config.left_raw_data
-        new_value_right = config.right_raw_data
-
-        # differnce
-        inc_delta_left = (current_value_left - new_value_left) / num_increments
-        inc_delta_right = (current_value_right - new_value_right) / num_increments
-
-        # slide between them at 10 ms per step
         while time.time() < end_time:
-            current_value_left += inc_delta_left
-            current_value_right += inc_delta_right
-            print(current_value_left, current_value_right)
+            # smoothing algo from Max/MSP slide object
+            # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
+
+            current_l = config.left_wheel_move
+            target_l = config.left_raw_data
+            current_r = config.right_wheel_move
+            target_r = config.right_raw_data
+
+            duration = smoothing_dur
+            interval = bang_timer
+
+            # number of increments
+            noi = duration / interval
+
+            # split the delta w/ noi
+            increment_value_l = (target_l - current_l) / noi
+            increment_value_r = (target_r - current_r) / noi
+
+            # smooth my ass
+            for _ in range(int(noi)):
+                current_l += increment_value_l
+                current_r += increment_value_r
+            print(current_l, current_r)
+
+            config.left_wheel_move = current_l
+            config.right_wheel_move = current_r
+
+            # wait for baudrate
             time.sleep(bang_timer)
 
-        return config.left_wheel_move, config.right_wheel_move

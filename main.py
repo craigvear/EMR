@@ -179,28 +179,30 @@ class DatasetEngine():
             config.left_raw_data = config.x_ds
         elif left_out == 1:
             config.left_raw_data = config.y_ds
-        elif left_out == 1:
+        elif left_out == 2:
             config.left_raw_data = config.z_ds
-        elif left_out == 1:
+        elif left_out == 3:
             config.left_raw_data = config.x_ml
-        elif left_out == 1:
+        elif left_out == 4:
             config.left_raw_data = config.y_ml
         else:
             config.left_raw_data = config.z_ml
+        print('left wheel raw output', config.left_raw_data)
 
         right_out = random.randrange(6)
         if right_out == 0:
             config.right_raw_data = config.x_ds
         elif right_out == 1:
             config.right_raw_data = config.y_ds
-        elif right_out == 1:
+        elif right_out == 2:
             config.right_raw_data = config.z_ds
-        elif right_out == 1:
+        elif right_out == 3:
             config.right_raw_data = config.x_ml
-        elif right_out == 1:
+        elif right_out == 4:
             config.right_raw_data = config.y_ml
         else:
             config.right_raw_data = config.z_ml
+        print('right wheel raw output', config.right_raw_data)
 
     def end_time_calc(self, duration):
         # returns the end time for loops
@@ -223,9 +225,9 @@ class DatasetEngine():
             # units of smoothing
             bang_timer = 0.03
 
-            self.left_wheel, self.right_wheel = self.smoother.smooth(smoothing_dur, bang_timer, end_time)
+            self.smoother.smooth(smoothing_dur, bang_timer, end_time)
 
-            print (f'left wheel = {self.left_wheel}, right wheel = {self.right_wheel}')
+            print (f'left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
 
             # return 'done'
 

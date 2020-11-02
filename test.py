@@ -1,13 +1,53 @@
-import config
-import random
+# config.left_wheel_move = current value
+# config.left_raw_data = target
+# result [y(n)] = y(n - 1) + ((x(n) - y(n - 1)) / slide)
+# current value will then = result
+# config.left_wheel_move = current value
 
-ml_out_4_mixer = random.randrange(6)
-if ml_out_4_mixer == 0:
-    left_raw = config.x_ml
+
+current = 1.2
+target = 4
+target2 = 1
+duration = 3
+interval = 0.1
+
+# number of increments
+noi = duration / interval
+# print(noi)
+
+# split the delta w/ noi
+increment_value = (target - current) / noi
+# print(increment_value)
+
+print(current)
+
+for _ in range(int(noi)):
+    # current
+    current += increment_value
+print(current)
+
+# split the delta w/ noi
+increment_value = (target2 - current) / noi
+# print(increment_value)
+
+for _ in range(int(noi)):
+    # current
+    current += increment_value
+print(current)
 
 
-print(ml_out_4_mixer)
 
+
+# import config
+# import random
+#
+# ml_out_4_mixer = random.randrange(6)
+# if ml_out_4_mixer == 0:
+#     left_raw = config.x_ml
+#
+#
+# print(ml_out_4_mixer)
+#
 
 
 # import csv
