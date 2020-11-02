@@ -1,161 +1,250 @@
-import tensorflow as tf
+import time
+import random
+import concurrent.futures
+import config
+import csv
+from ml import Predictions
+from smoothing import Smoother
 
-from random import shuffle, randrange
-import pandas as pd
-from numpy import reshape, array
-from time import sleep, time
-# from jetbot import Robot
-from threading import Thread, Lock, Event
+class DatasetEngine():
+    # conducts the whole macro timings
+    def __init__(self):
+        pass
 
-from pydub import AudioSegment
-from pydub.playback import _play_with_simpleaudio as play
-import glob
-from queue import Queue
-from random import random, randrange
+    def dataset_choice(self):
+        """chooses a dataset file, parses into a list"""
 
-# load models from single files
-# set up global variables
-BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_1000epochs-3in-3out_model.h5'
-BODY_model = tf.keras.models.load_model(BODY_model_path)
-test_dataset_path = 'training/good_dataset_mini.csv'
+        # if an affect flag happens this will break cycle
+        while not self.affect_interrupt:
 
-# audio source variables
-audio_file = ('data/jarrett_snippet.wav')
-audio = AudioSegment.from_wav(audio_file)
-audio_len = audio.duration_seconds
+            # how long to read a dataset file
+            dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
+            print(f'dataset choice duration = {dataset_choice_dur} seconds')
+
+            # todo choose a dataset file and send to config file
+            dataset = test_dataset_path
+            print('dataset = ', config.dataset)
+
+            # send to list making function
+            self.dataparsing(dataset)
+
+            # wait for this process to timeout 6-26 seconds
+            time.sleep(dataset_choice_dur)
+
+            return 'done'
+
+    def dataparsing(self, dataset):
+        # takes the chosen dataset file and parses into list
+        with open(dataset) as f:
+            reader = csv.reader(f)
+            self.data_list = []
+            # converts strings into floats
+            for row in reader:
+                data = [float(item) for item in row[2:]]
+                self.data_list.append(data)
+        print('converted dataset into float list')
+
+    def dataset_read(self):
+        """picks a starting line and parses it"""
+        # if an affect flag happens this will break cycle
+        while not self.affect_interrupt:
+
+            # set a random duration for reading from random line
+            dataset_read_dur = (random.randrange(3000, 13000)/ 1000)
+
+            # sorts out durations
+            print('dataset line read duration = ', dataset_read_dur)
+            end_time = self.end_time_calc(dataset_read_dur)
+
+            # prepare start line to read
+            starting_line = self.line_to_read()
+
+            # determine if read is to be looped or sequential
+            looped = self.is_loop()
+
+            # calc baudrate
+            baudrate = self.baudrate()
+
+            # parse lines of dataset for duration
+            self.parse(end_time, looped, starting_line, baudrate)
+
+            print('done')
+
+    def baudrate(self):
+        # calculates the daudrate for reading 3-13 seconds
+        return (random.randrange(300, 1300) / 1000)
+
+    def line_to_read(self):
+        # random line to start reading
+        ds_len = len(self.data_list)
+        start_line_read = random.randrange(ds_len)
+
+        # print out the details andf returns
+        print(f'dataset read start point for reading line {start_line_read}')
+        return start_line_read
+
+    def parse(self, end_time, looped, starting_line, baudrate):
+        # starting line is
+        line_to_read = starting_line
+        read_line = self.data_list[line_to_read]
+        print('reading line ', read_line)
+
+        # while the read set duration is active
+        while time.time() < end_time:
+            # if looped
+            if looped > 0:
+                loop_end = time.time() + looped
+
+                # reset the start read point
+                line_to_read = starting_line
+
+                # for each loop
+                while time.time() < loop_end:
+                    active_line = self.data_list[line_to_read]
+                    print('output line of ds = ', active_line)
+                    config.x_ds, config.y_ds, config.z_ds = active_line[:3]
+                    line_to_read += 1
+                    time.sleep(baudrate)
+
+            else:
+                # if no loop
+                active_line = self.data_list[line_to_read]
+                print('output line of ds = ', active_line)
+                config.x_ds, config.y_ds, config.z_ds = active_line[:3]
+                line_to_read += 1
+                time.sleep(baudrate)
+
+    def is_loop(self):
+        # determines if the parsing is to be looped
+        looped = random.randrange(10)
+
+        # >= 5 =50% chance of looping
+        if looped > 5:
+            loop_duration = random.random() * 2
+            print("loop duration = ", loop_duration)
+            return loop_duration
+        else:
+            print('no loop')
+            return 0
+
+    def mlpredictions(self):
+        """makes a RNN prediction and parses it"""
+        # if an affect flag happens this will break cycle
+        while not self.affect_interrupt:
+            # set a random duration for reading from random line
+            ml_read_dur = (random.randrange(3000, 13000) / 1000)
+            predict_rate = self.baudrate()
+
+            print('ml line read duration = ', ml_read_dur)
+            end_time = self.end_time_calc(ml_read_dur)
+
+            while time.time() < end_time:
+                # passes ml_atom to RNN returns ml_predict
+                ml_predict = self.ml.ml_predictions(self.ml_atom)
+                print('ml prediction = ', ml_predict)
+
+                # parse the result into config
+                config.x_ml, config.y_ml, config.z_ml = ml_predict
+
+                # wait for baudrate to cycle
+                time.sleep(predict_rate)
+
+        print('done')
+
+    def mixing(self):
+        # TODO affect module proper
+
+        # quick mix TEMPORARY
+        left_out = random.randrange(6)
+        if left_out == 0:
+            config.left_raw_data = config.x_ds
+        elif left_out == 1:
+            config.left_raw_data = config.y_ds
+        elif left_out == 1:
+            config.left_raw_data = config.z_ds
+        elif left_out == 1:
+            config.left_raw_data = config.x_ml
+        elif left_out == 1:
+            config.left_raw_data = config.y_ml
+        else:
+            config.left_raw_data = config.z_ml
+
+        right_out = random.randrange(6)
+        if right_out == 0:
+            config.right_raw_data = config.x_ds
+        elif right_out == 1:
+            config.right_raw_data = config.y_ds
+        elif right_out == 1:
+            config.right_raw_data = config.z_ds
+        elif right_out == 1:
+            config.right_raw_data = config.x_ml
+        elif right_out == 1:
+            config.right_raw_data = config.y_ml
+        else:
+            config.right_raw_data = config.z_ml
+
+    def end_time_calc(self, duration):
+        # returns the end time for loops
+        now_time = time.time()
+        return now_time + duration
+
+    def smoothing(self):
+        # temporary mixing function
+        self.mixing()
+
+        # hoe long we going to smooth at this rate?
+        smoothing_dur = random.randrange(150, 1300) / 1000
+
+        # endtime calc
+        end_time = self.end_time_calc(smoothing_dur)
+
+        # units of smoothing
+        bang_timer = 0.03
+
+        self.left_wheel, self.right_wheel = \
+            self.smoother.smooth(smoothing_dur,bang_timer, end_time)
+
+        print (f'left wheel = {self.left_wheel}, right wheel = {self.right_wheel}')
+
+        print('done')
 
 
+if __name__ == '__main__':
 
-# defines the readable dataset, shuffles it, then resets index
-df = pd.read_csv(test_dataset_path, sep=",", header=None, names=["id", "limb", "x", "y", "z", "freq", "amp"])
-df = df.filter(['x', 'y', 'z'])
-print(df)
-index = list(df.index)
-index_len = len(index)
-shuffle(index)
-df = df.iloc[index]
-df.reset_index()
+    test_dataset_path = 'training/raw_phase1_dataset.csv'
 
-# A thread that produces data list
-def producer_data():
-    dur = what_is_duration()
-    seed = choose_incoming_df()
+    running = True
+    affect_interrupt = False
+    # instantiate the baudrate object
+    dse = DatasetEngine()
 
-    # get predictions. x & y for wheel movement, z for duration variability
-    pred_x, pred_y, pred_z = ml_predictions(seed)
-    return (dur, pred_x, pred_y, pred_z)
+    affect_interrupt = False
+    # todo choose a dataset file and send to config file
+    dataset = test_dataset_path
+    print('dataset = ', dataset)
 
-# functions producing data
-def ml_predictions(features): # RNN predict x, y, z
-    row = array(features)
-    inputX = reshape(row, (row.shape[0], row.shape[1], 1))
-    pred = BODY_model.predict(inputX, verbose=0)
-    pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2] # only want x and y at this stage
-    # print('prediction RNN = ', pred)
-    return pred_x, pred_y, pred_z
+    # send to list making function
+    dataparsing(dataset)
 
-def what_is_duration(): # of the sound/movment event
-    dur_rnd = random()
-    rnd_div = randrange(20)
-    return (dur_rnd / (rnd_div + 1)) + 0.03
+    # set up ml
+    ml = Predictions()
+    ml_atom = self.ml.seed(self.data_list)
 
-def choose_incoming_df(): # randomly find a row and use as seed
-    ind = randrange(index_len)
-    seed = [[df['x'][ind], df['y'][ind], df['z'][ind]]]
-    return seed
-
-# thread that consumes data
-def consumer(incoming_data):
-    # Get some data
-    ((packed_data, evt)) = incoming_data
-    (dur, pred_x, pred_y, pred_z) = data
-    start_pos = start_position(dur, pred_z)
-
-    with play_lock:
-        # Process the data
-        play_sound(start_pos, dur)  # in seconds!!!
-        robot_move(pred_x, pred_y)
-
-    # indicate completion
-    evt.set()
-
-def start_position(dur, pred_z):
-    poss_length = int((audio_len - (dur)) * 1000)
-    rnd_length_ms = randrange(poss_length) * pred_z
-    return rnd_length_ms / 1000
-
-def play_sound(start_pos, dur):
-    start_pos_ms = start_pos * 1000
-    dur_ms = dur * 1000
-    end_pos_ms = start_pos_ms + dur_ms
-    audio_slice = audio[start_pos_ms: end_pos_ms]
-
-    play(audio_slice)
-    sleep(dur-0.02)
-
-def robot_move(pred_x, pred_y):
-    multi_factor = 1
-    pred_x *= multi_factor # todo rescale rather than blanket * x
-    pred_y *= multi_factor
-    left_wheel_move, right_wheel_move = 0, 0
-    # left and right motion
-    if pred_x < 0:
-        right_wheel_move += pred_x * -1
-    else:
-        left_wheel_move += pred_x
-    # fwd & bwd motion
-    right_wheel_move += pred_y
-    left_wheel_move += pred_y
-    print(left_wheel_move, right_wheel_move)
-    # robot.set_motors(left_wheel_move, right_wheel_move)
+    # setup smoothing
+    smoother = Smoother()
 
 
-def threader():
-    while True:
-        # gets an worker from the queue
-        data = q.get()
+    # dse.dataset_choice()
+    # dse.dataset_read()
+    # dse.smoothing()
 
-        # Run the example job with the avail worker in queue (thread)
-        consumer(data)
+    # # while the program is running
+    while running:
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            p1 = executor.submit(dse.dataset_choice)
+            # p2 = executor.submit(dse.dataset_read)
+            # p3 = executor.submit(dse.mlpredictions)
+            # p4 = executor.submit(dse.affect_mixing)
+            # p5 = executor.submit(dse.smoothing)
+            # p6 = executor.submit(dse.move_robot)
 
-        # completed with the job
-        q.task_done()
-
-if __name__ == "__main__":
-    # get the length of the improv
-    length = input('What length?   (in whole minutes e.g. 2) ___ ')
-    time_now = time()
-    end_time = time_now + (int(length) * 60)
-
-    # instantiate the objects
-    play_lock = Lock()
-    # robot = Robot()
-
-    # Create the shared queue and launch both threads
-    q = Queue()
-
-    # how many threads are we going to allow for
-    for x in range(3):
-        t1 = Thread(target=threader)
-
-        # classifying as a daemon, so they will die when the main dies
-        t1.daemon = True
-
-        # begins, must come after daemon definition
-        t1.start()
-
-    # 10 jobs assigned.
-    while time() < end_time:
-        for worker in range(3):
-            evt = Event()
-            # produce some data
-            data = producer_data()
-
-            # Make a data, evt pair and hand to q for customer
-            q.put((data, evt))
-
-            # wait for cusotmer to process
-            evt.wait()
-
-    # wait until the thread terminates.
-    q.join()
