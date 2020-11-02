@@ -5,11 +5,28 @@ import config
 import csv
 from ml import Predictions
 from smoothing import Smoother
+test_dataset_path = 'training/raw_phase1_dataset.csv'
+
+running = True
+affect_interrupt = False
 
 class DatasetEngine():
     # conducts the whole macro timings
     def __init__(self):
-        pass
+        self.affect_interrupt = False
+        # todo choose a dataset file and send to config file
+        dataset = test_dataset_path
+        print('dataset = ', config.dataset)
+
+        # send to list making function
+        self.dataparsing(dataset)
+
+        # set up ml
+        self.ml = Predictions()
+        self.ml_atom = self.ml.seed(self.data_list)
+
+        # setup smoothing
+        self.smoother = Smoother()
 
     def dataset_choice(self):
         """chooses a dataset file, parses into a list"""
@@ -128,6 +145,8 @@ class DatasetEngine():
             return 0
 
     def mlpredictions(self):
+        # todo last output to input
+
         """makes a RNN prediction and parses it"""
         # if an affect flag happens this will break cycle
         while not self.affect_interrupt:
@@ -149,7 +168,7 @@ class DatasetEngine():
                 # wait for baudrate to cycle
                 time.sleep(predict_rate)
 
-        print('done')
+        return 'done'
 
     def mixing(self):
         # TODO affect module proper
@@ -189,50 +208,31 @@ class DatasetEngine():
         return now_time + duration
 
     def smoothing(self):
-        # temporary mixing function
-        self.mixing()
+        # if an affect flag happens this will break cycle
+        while not self.affect_interrupt:
 
-        # hoe long we going to smooth at this rate?
-        smoothing_dur = random.randrange(150, 1300) / 1000
+            # temporary mixing function
+            self.mixing()
 
-        # endtime calc
-        end_time = self.end_time_calc(smoothing_dur)
+            # how long we going to smooth at this rate?
+            smoothing_dur = random.randrange(150, 1300) / 1000
 
-        # units of smoothing
-        bang_timer = 0.03
+            # endtime calc
+            end_time = self.end_time_calc(smoothing_dur)
 
-        self.left_wheel, self.right_wheel = \
-            self.smoother.smooth(smoothing_dur,bang_timer, end_time)
+            # units of smoothing
+            bang_timer = 0.03
 
-        print (f'left wheel = {self.left_wheel}, right wheel = {self.right_wheel}')
+            self.left_wheel, self.right_wheel = self.smoother.smooth(smoothing_dur, bang_timer, end_time)
 
-        print('done')
+            print (f'left wheel = {self.left_wheel}, right wheel = {self.right_wheel}')
+
+            # return 'done'
 
 
 if __name__ == '__main__':
-
-    test_dataset_path = 'training/raw_phase1_dataset.csv'
-
-    running = True
-    affect_interrupt = False
     # instantiate the baudrate object
     dse = DatasetEngine()
-
-    affect_interrupt = False
-    # todo choose a dataset file and send to config file
-    dataset = test_dataset_path
-    print('dataset = ', dataset)
-
-    # send to list making function
-    dataparsing(dataset)
-
-    # set up ml
-    ml = Predictions()
-    ml_atom = self.ml.seed(self.data_list)
-
-    # setup smoothing
-    smoother = Smoother()
-
 
     # dse.dataset_choice()
     # dse.dataset_read()
@@ -240,11 +240,11 @@ if __name__ == '__main__':
 
     # # while the program is running
     while running:
-        with concurrent.futures.ProcessPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             p1 = executor.submit(dse.dataset_choice)
-            # p2 = executor.submit(dse.dataset_read)
-            # p3 = executor.submit(dse.mlpredictions)
+            p2 = executor.submit(dse.dataset_read)
+            p3 = executor.submit(dse.mlpredictions)
             # p4 = executor.submit(dse.affect_mixing)
-            # p5 = executor.submit(dse.smoothing)
+            p5 = executor.submit(dse.smoothing)
             # p6 = executor.submit(dse.move_robot)
 

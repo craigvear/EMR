@@ -47,5 +47,5 @@ class Predictions():
         inputX = reshape(row, (row.shape[0], row.shape[1], 1))
         pred = BODY_model.predict(inputX, verbose=0)
         pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2] # only want x and y at this stage
-        return (pred_x, pred_y, pred_z)
+        return (pred_x/100, pred_y/100, pred_z/100)
 
