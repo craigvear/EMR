@@ -1,16 +1,6 @@
 import tensorflow as tf
-
-from random import shuffle, randrange
 import pandas as pd
 from numpy import reshape, array
-from time import sleep, time
-# from jetbot import Robot
-from threading import Thread, Lock, Event
-
-from pydub import AudioSegment
-from pydub.playback import _play_with_simpleaudio as play
-import glob
-from queue import Queue
 import random
 
 # setup initial params on calling
@@ -42,10 +32,16 @@ class Predictions():
 
     # functions producing data
     def ml_predictions(self, features): # RNN predict x, y, z
+        # converts incoming tuple into array
         row = array(features)
-        # print(row)
+
+        # reshapes array into 2 dimensions for tf predict
         inputX = reshape(row, (row.shape[0], row.shape[1], 1))
+
+        # makes a predictaion
         pred = BODY_model.predict(inputX, verbose=0)
-        pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2] # only want x and y at this stage
+
+        # parses it and returns ias individual vars
+        pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2]
         return (pred_x, pred_y, pred_z)
 

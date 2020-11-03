@@ -2,7 +2,5 @@
 
 # todo listening
 
-# todo concurrency
-
-# todo
+# todo affect module
 
