@@ -4,14 +4,14 @@ dataset = 'training/raw_phase1_dataset.csv'
 working_datafile_name = 'empty'
 
 # variable for dataset parsing
-x_ds = 0
-y_ds = 0
-z_ds = 0
+x_ds = 0.5
+y_ds = 0.5
+z_ds = 0.5
 
 # variable for ML parsing
-x_ml = 0
-y_ml = 0
-z_ml = 0
+x_ml = 0.5
+y_ml = 0.5
+z_ml = 0.5
 
 # variables for motor movement
 right_raw_data = 0

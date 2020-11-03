@@ -1,5 +1,6 @@
 import time
 import random
+import glob
 import concurrent.futures
 import config
 import csv
@@ -7,7 +8,7 @@ from ml import Predictions
 from robot import Robot
 
 # setting up global vars
-test_dataset_path = 'dataset/4_11_2019_12347.csv'
+dataset_list = glob.glob('dataset/*.csv')
 running = True
 affect_interrupt = False # todo replace with traitlet?
 
@@ -15,9 +16,10 @@ class DatasetEngine():
     # conductor for the macro timings for ds read
     def __init__(self):
         self.affect_interrupt = False
-        # todo choose a dataset file and send to config file
-        dataset = test_dataset_path
-        print('dataset = ', config.dataset)
+
+        # select the dataset file for this cycle
+        dataset = self.which_dataset()
+        print('dataset = ', dataset)
 
         # send to list making function
         self.dataparsing(dataset)
@@ -28,19 +30,22 @@ class DatasetEngine():
         # setup smoothing
         self.bot = Robot()
 
+    def which_dataset(self):
+        return random.choice(dataset_list)
+
     def dataset_choice(self):
         """chooses a dataset file, parses into a list"""
 
         # if an affect flag happens this will break cycle
         while not self.affect_interrupt:
 
-            # how long to read a dataset file
+            # how long to read a dataset file for this cycle
             dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
             print(f'dataset choice duration = {dataset_choice_dur} seconds')
 
-            # todo choose a dataset file and send to config file
-            dataset = test_dataset_path
-            print('dataset = ', config.dataset)
+            # select the dataset file for this cycle
+            dataset = self.which_dataset()
+            print('dataset = ', dataset)
 
             # send to list making function
             self.dataparsing(dataset)
@@ -48,17 +53,19 @@ class DatasetEngine():
             # wait for this process to timeout 6-26 seconds
             time.sleep(dataset_choice_dur)
 
-            # return 'done'
-
     def dataparsing(self, dataset):
         # takes the chosen dataset file and parses into list
         with open(dataset) as f:
             reader = csv.reader(f)
+
+            # build the dataset as a working list for other threads
             self.data_list = []
 
             # converts strings into floats
             for row in reader:
                 data = [float(item) for item in row[2:]]
+
+                # populate the working list
                 self.data_list.append(data)
         print('converted dataset into float list')
 
@@ -86,15 +93,16 @@ class DatasetEngine():
             # parse lines of dataset for duration
             self.parse(end_time, looped, starting_line, baudrate)
 
-            # return 'done'
-
     def baudrate(self):
         # calculates the baudrate for reading 3-13 seconds
+        # (shared by ds read and ml read)
         return (random.randrange(300, 1300) / 1000)
 
     def line_to_read(self):
         # random line to start reading
         ds_len = len(self.data_list)
+        if ds_len > 7000:
+            ds_len = 7000 # todo sort out the disparity of ds file lengths
         start_line_read = random.randrange(ds_len)
 
         # print out the details andf returns
@@ -105,7 +113,8 @@ class DatasetEngine():
         # starting line is
         line_to_read = starting_line
         read_line = self.data_list[line_to_read]
-        print('reading line ', read_line)
+        print(f'reading line {read_line}, parse end time {parse_end_time}, '
+              f'looped {looped}, baudrate {baudrate}')
 
         # while the read set duration is active
         while time.time() < parse_end_time:
@@ -132,7 +141,7 @@ class DatasetEngine():
                 config.x_ds = active_line[0]
                 config.y_ds = active_line[1]
                 config.z_ds = active_line[2]
-                print('config ds ', config.x_ds, config.y_ds, config. z_ds)
+                print('config ds ', config.x_ds, config.y_ds, config.z_ds)
                 line_to_read += 1
                 time.sleep(baudrate)
 
@@ -142,7 +151,7 @@ class DatasetEngine():
 
         # >= 5 =50% chance of looping
         if looped > 5:
-            loop_duration = random.random() * 2
+            loop_duration = random.randrange(5, 15) / 10
             print("loop duration = ", loop_duration)
             return loop_duration
         else:
@@ -176,8 +185,6 @@ class DatasetEngine():
                 print('config ml ', config.x_ml, config.y_ml, config.z_ml)
                 # wait for baudrate to cycle
                 time.sleep(predict_rate)
-
-            # return 'done'
 
     def mixing(self):
         # TODO affect module proper - this moves to there
@@ -218,7 +225,7 @@ class DatasetEngine():
         now_time = time.time()
         return now_time + duration
 
-    def smoothing(self):
+    def roboting(self):
         """smooths output from raw data generation.
         Calcs differences. Moves robot. Makes sound"""
         # if an affect flag happens this will break cycle
@@ -228,19 +235,15 @@ class DatasetEngine():
             self.mixing()
 
             # how long we going to smooth at this rate?
-            smoothing_dur = random.randrange(150, 1300) / 1000
+            smoothing_dur = random.randrange(150, 1300) / 100
 
             # endtime calc
             end_time = self.end_time_calc(smoothing_dur)
 
-            # units of smoothing
-            bang_timer = 0.03
-
-            # send the data to smoothing and robot move
+            # # send the data to smoothing and robot move
             self.bot.smooth(smoothing_dur, end_time)
             print (f'left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
 
-            # return 'done'
 
 if __name__ == '__main__':
     # instantiate the baudrate object
@@ -248,10 +251,10 @@ if __name__ == '__main__':
 
     # while the program is running
     while running:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
             p3 = executor.submit(dse.mlpredictions)
             # # p4 = executor.submit(dse.affect_mixing)
-            p5 = executor.submit(dse.smoothing)
+            p5 = executor.submit(dse.roboting)
 

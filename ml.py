@@ -27,7 +27,7 @@ class Predictions():
         # takes incoming tuple and converts into self.df for ml
         df = pd.DataFrame([incoming], columns=["x", "y", "z"])
         df = df.filter(['x', 'y', 'z'])
-        print(df)
+        # print(df)
         return df
 
     # functions producing data

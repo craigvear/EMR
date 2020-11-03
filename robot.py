@@ -1,5 +1,6 @@
 import time
 import config
+from random import randrange
 from pydub import AudioSegment
 from pydub.playback import _play_with_simpleaudio as play
 
@@ -12,6 +13,7 @@ class Robot(): # smooths the data as a thread class
         audio_file = ('data/jarrett_snippet.wav')
         self.audio = AudioSegment.from_wav(audio_file)
         self.audio_len = self.audio.duration_seconds
+        print('audio length (secs) = ', self.audio_len)
         print("Roboting, baby")
 
         # temp moving vars
@@ -21,6 +23,10 @@ class Robot(): # smooths the data as a thread class
         self.old_right_sound = 0
 
     def smooth(self, smoothing_dur, end_time):
+        # define a division rhythm for increments this cycle
+        division_factor = randrange(10, 80)
+        print('div factor', division_factor)
+
         # slide between them at bang_timer ms per step
         while time.time() < end_time:
             # smoothing algo from Max/MSP slide object
@@ -32,7 +38,7 @@ class Robot(): # smooths the data as a thread class
             target_r = config.right_raw_data
 
             duration = smoothing_dur
-            self.interval = duration / 10
+            self.interval = duration / division_factor
 
             # number of increments
             noi = duration / self.interval
@@ -41,7 +47,7 @@ class Robot(): # smooths the data as a thread class
             increment_value_l = (target_l - current_l) / noi
             increment_value_r = (target_r - current_r) / noi
 
-            # smooth ouputs
+            # smooth outputs
             for _ in range(int(noi)):
                 current_l += increment_value_l
                 current_r += increment_value_r
@@ -73,12 +79,13 @@ class Robot(): # smooths the data as a thread class
         # make old vars the current move vars
         config.old_left = bot_move_left
         config.old_right = bot_move_right
+
         return bot_move_left, bot_move_right
 
     def sound(self, bot_move_left, bot_move_right):
         # round incoming numbers to 2 dp
-        bot_move_left_round = round(bot_move_left, 1)
-        bot_move_right_round = round(bot_move_right, 1)
+        bot_move_left_round = round(bot_move_left, 3)
+        bot_move_right_round = round(bot_move_right, 3)
         # print (bot_move_left, bot_move_right)
         poss_length = int(self.audio_len - (self.interval))
 
@@ -112,16 +119,22 @@ class Robot(): # smooths the data as a thread class
 
     def play_sound(self, start_pos):
         # adds a bit of overlap with audio threading
-        dur_ms = self.interval * 1000 + 100
+        dur_ms = self.interval * 1000 # + 100
         end_pos_ms = start_pos + dur_ms
         # print('play params = ', start_pos, dur_ms)
+
+        if end_pos_ms > self.audio_len * 1000:
+            end_pos_ms = self.audio_len * 1000
 
         # concats slicing data
         audio_slice = self.audio[start_pos: end_pos_ms]
 
         # plays audio
-        play(audio_slice)
+        try:
+            play(audio_slice)
+        except:
+            print(f'################   error start pos {start_pos}, end pos {end_pos_ms}')
 
     def calc_start_point(self, incoming, poss_length):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return (((incoming - 0) * ((poss_length * 1000) - 0)) / (1.0 - 0)) + 0
+        return (((incoming - -1) * ((poss_length * 1000) - -1)) / (1.0 - -1)) + 0
