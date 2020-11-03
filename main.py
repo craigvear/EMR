@@ -23,7 +23,7 @@ class DatasetEngine():
 
         # set up ml
         self.ml = Predictions()
-        self.ml_atom = self.ml.seed(self.data_list)
+        # self.ml_atom = self.ml.seed(self.data_list)
 
         # setup smoothing
         self.smoother = Smoother()
@@ -119,7 +119,10 @@ class DatasetEngine():
                 while time.time() < loop_end:
                     active_line = self.data_list[line_to_read]
                     print('output line of ds = ', active_line)
-                    config.x_ds, config.y_ds, config.z_ds = active_line[:3]
+                    config.x_ds = active_line[0]
+                    config.y_ds = active_line[1]
+                    config.z_ds = active_line[2]
+                    print('config ds ', config.x_ds, config.y_ds, config.z_ds)
                     line_to_read += 1
                     time.sleep(baudrate)
 
@@ -127,7 +130,10 @@ class DatasetEngine():
                 # if no loop
                 active_line = self.data_list[line_to_read]
                 print('output line of ds = ', active_line)
-                config.x_ds, config.y_ds, config.z_ds = active_line[:3]
+                config.x_ds = active_line[0]
+                config.y_ds = active_line[1]
+                config.z_ds = active_line[2]
+                print('config ds ', config.x_ds, config.y_ds, config. z_ds)
                 line_to_read += 1
                 time.sleep(baudrate)
 
@@ -159,12 +165,17 @@ class DatasetEngine():
 
             while time.time() < end_time:
                 # passes ml_atom to RNN returns ml_predict
-                ml_predict = self.ml.ml_predictions(self.ml_atom)
+                features = [config.x_ds, config.y_ds, config. z_ds]
+                df_features = self.ml.make_df(features)
+                ml_predict = self.ml.ml_predictions(df_features)
                 print('ml prediction = ', ml_predict)
 
                 # parse the result into config
-                config.x_ml, config.y_ml, config.z_ml = ml_predict
+                config.x_ml = ml_predict[0]
+                config.y_ml = ml_predict[1]
+                config.z_ml = ml_predict[2]
 
+                print('config ml ', config.x_ml, config.y_ml, config.z_ml)
                 # wait for baudrate to cycle
                 time.sleep(predict_rate)
 

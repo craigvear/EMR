@@ -14,7 +14,7 @@ from queue import Queue
 import random
 
 # setup initial params on calling
-BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_1000epochs-3in-3out_model.h5'
+BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-3in-3out_model.h5'
 BODY_model = tf.keras.models.load_model(BODY_model_path)
 
 
@@ -35,7 +35,7 @@ class Predictions():
 
     def make_df(self, incoming):
         # takes incoming tuple and converts into self.df for ml
-        df = pd.DataFrame([incoming], columns=["x", "y", "z", "freq", "amp"])
+        df = pd.DataFrame([incoming], columns=["x", "y", "z"])
         df = df.filter(['x', 'y', 'z'])
         print(df)
         return df
@@ -47,5 +47,5 @@ class Predictions():
         inputX = reshape(row, (row.shape[0], row.shape[1], 1))
         pred = BODY_model.predict(inputX, verbose=0)
         pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2] # only want x and y at this stage
-        return (pred_x/100, pred_y/100, pred_z/100)
+        return (pred_x, pred_y, pred_z)
 
