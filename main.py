@@ -4,9 +4,9 @@ import concurrent.futures
 import config
 import csv
 from ml import Predictions
-from smoothing import Smoother
-test_dataset_path = 'training/raw_phase1_dataset.csv'
+from robot import Robot
 
+test_dataset_path = 'training/raw_phase1_dataset.csv'
 running = True
 affect_interrupt = False
 
@@ -26,7 +26,8 @@ class DatasetEngine():
         # self.ml_atom = self.ml.seed(self.data_list)
 
         # setup smoothing
-        self.smoother = Smoother()
+        self.bot = Robot()
+
 
     def dataset_choice(self):
         """chooses a dataset file, parses into a list"""
@@ -236,11 +237,11 @@ class DatasetEngine():
             # units of smoothing
             bang_timer = 0.03
 
-            self.smoother.smooth(smoothing_dur, bang_timer, end_time)
+            self.bot.smooth(smoothing_dur, bang_timer, end_time)
 
             print (f'left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
 
-            # return 'done'
+            # self.move_robot(bang_timer)
 
 
 if __name__ == '__main__':
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     # dse.dataset_read()
     # dse.smoothing()
 
-    # # while the program is running
+    # while the program is running
     while running:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             p1 = executor.submit(dse.dataset_choice)
@@ -259,5 +260,4 @@ if __name__ == '__main__':
             p3 = executor.submit(dse.mlpredictions)
             # p4 = executor.submit(dse.affect_mixing)
             p5 = executor.submit(dse.smoothing)
-            # p6 = executor.submit(dse.move_robot)
 

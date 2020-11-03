@@ -20,6 +20,9 @@ left_raw_data = 0
 left_wheel_move = 0
 right_wheel_move = 0
 
+old_left = 0
+old_right = 0
+
 #working variables for robot motors
 atom_id = 0
 atom_limb = 'empty'

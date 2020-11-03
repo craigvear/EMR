@@ -17,40 +17,36 @@ from queue import Queue
 
 
 
-# audio source variables
-audio_file = ('data/jarrett_snippet.wav')
-audio = AudioSegment.from_wav(audio_file)
-audio_len = audio.duration_seconds
+
+
+class Robot():
+    def __init__(self):
+
+
+    def move(self):
+        # robot.set_motors(config.left_wheel_move, config.right_wheel_move)
+        self.sound()
+
+    def sound(self):
+        pass
 
 
 
-# A thread that produces data list
-def producer_data():
-    dur = what_is_duration()
-    seed = choose_incoming_df()
+# # A thread that produces data list
+# def producer_data():
+#     dur = what_is_duration()
+#     seed = choose_incoming_df()
 
-    # get predictions. x & y for wheel movement, z for duration variability
-    pred_x, pred_y, pred_z = ml_predictions(seed)
-    return (dur, pred_x, pred_y, pred_z)
+    # # get predictions. x & y for wheel movement, z for duration variability
+    # pred_x, pred_y, pred_z = ml_predictions(seed)
+    # return (dur, pred_x, pred_y, pred_z)
 
-# functions producing data
-def ml_predictions(features): # RNN predict x, y, z
-    row = array(features)
-    inputX = reshape(row, (row.shape[0], row.shape[1], 1))
-    pred = BODY_model.predict(inputX, verbose=0)
-    pred_x, pred_y, pred_z = pred[0,0], pred[0,1], pred[0,2] # only want x and y at this stage
-    # print('prediction RNN = ', pred)
-    return pred_x, pred_y, pred_z
 
-def what_is_duration(): # of the sound/movment event
-    dur_rnd = random()
-    rnd_div = randrange(20)
-    return (dur_rnd / (rnd_div + 1)) + 0.03
+# def what_is_duration(): # of the sound/movment event
+#     dur_rnd = random()
+#     rnd_div = randrange(20)
+#     return (dur_rnd / (rnd_div + 1)) + 0.03
 
-def choose_incoming_df(): # randomly find a row and use as seed
-    ind = randrange(index_len)
-    seed = [[df['x'][ind], df['y'][ind], df['z'][ind]]]
-    return seed
 
 # thread that consumes data
 def consumer(incoming_data):
