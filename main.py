@@ -260,7 +260,7 @@ class DatasetEngine():
     def affect_listening(self):
         time.sleep(1)
         CHUNK = 2 ** 11
-        RATE = 22050
+        RATE = 11025
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
                         frames_per_buffer=CHUNK)
@@ -275,6 +275,7 @@ class DatasetEngine():
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
                 time.sleep(0.02)
                 self.affect_interrupt = False
+        self.snd_listen_terminate()
 
     def snd_listen_terminate(self):
         self.stream.stop_stream()
@@ -287,7 +288,7 @@ class DatasetEngine():
         # how long to stay in a mix
         rnd_timing = (random.randrange(1000, 4000) / 1000)
         loop_end = time.time() + rnd_timing
-
+        # todo problem here !!!!!!!!
         # hold mix until affect bang or end of cycle
         for _ in range(int(loop_end) * 100):
             if self.affect_interrupt:
@@ -309,4 +310,3 @@ if __name__ == '__main__':
             p4 = executor.submit(dse.affect_listening)
             p5 = executor.submit(dse.affect_mixing)
             p6 = executor.submit(dse.roboting)
-

@@ -8,7 +8,7 @@ import config
 
 class Affect():
     def __init__(self):
-        pass
+        print('affect object init')
 
     def mixing(self):
         # randomly mixes the data streams to the smoothing/wheels
