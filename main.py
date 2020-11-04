@@ -4,6 +4,8 @@ import glob
 import concurrent.futures
 import config
 import csv
+import pyaudio
+import numpy as np
 from ml import Predictions
 from robot import Robot
 
@@ -264,16 +266,29 @@ class DatasetEngine():
             self.bot.smooth(smoothing_dur, end_time)
             print (f'D3 left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
 
-
     def affect_mixing(self):
+        time.sleep(1)
+        CHUNK = 2 ** 11
+        RATE = 22050
+        self.p = pyaudio.PyAudio()
+        self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
+                        frames_per_buffer=CHUNK)
         while running:
-            time.sleep(2)
-            self.affect_interrupt = True
-            print('##############################    AFFECT BANG  ###########################')
+            data = np.frombuffer(self.stream.read(CHUNK), dtype=np.int16)
+            peak = np.average(np.abs(data)) * 2
+            # bars = "#" * int(50 * peak / 2 ** 16)
+            # print("%05d %s" % (peak, bars))
+            if peak > 4000:
+                self.affect_interrupt = True
+                print('##############################    AFFECT BANG  ###########################')
+                # hold bang for 0.02 so all waits catch it (which are 0.01!!)
+                time.sleep(0.02)
+                self.affect_interrupt = False
 
-            # hold bang for 0.02 so all waits catch it (which are 0.01!!)
-            time.sleep(0.02)
-            self.affect_interrupt = False
+    def snd_listen_terminate(self):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
 
 
 if __name__ == '__main__':
