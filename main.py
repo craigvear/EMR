@@ -6,6 +6,7 @@ import config
 import csv
 import pyaudio
 import numpy as np
+from affect import Affect
 from ml import Predictions
 from robot import Robot
 
@@ -29,7 +30,10 @@ class DatasetEngine():
         # set up ml
         self.ml = Predictions()
 
-        # setup smoothing
+        # set up affect and mixing
+        self.affect = Affect()
+
+        # setup robot moving and sounding
         self.bot = Robot()
 
     def which_dataset(self):
@@ -200,39 +204,39 @@ class DatasetEngine():
                 # wait for baudrate to cycle
                 time.sleep(predict_rate)
 
-    def mixing(self):
-        # TODO affect module proper - this moves to there
-
-        # quick mix TEMPORARY
-        left_out = random.randrange(6)
-        if left_out == 0:
-            config.left_raw_data = config.x_ds
-        elif left_out == 1:
-            config.left_raw_data = config.y_ds
-        elif left_out == 2:
-            config.left_raw_data = config.z_ds
-        elif left_out == 3:
-            config.left_raw_data = config.x_ml
-        elif left_out == 4:
-            config.left_raw_data = config.y_ml
-        else:
-            config.left_raw_data = config.z_ml
-        print('D1 left wheel raw output', config.left_raw_data)
-
-        right_out = random.randrange(6)
-        if right_out == 0:
-            config.right_raw_data = config.x_ds
-        elif right_out == 1:
-            config.right_raw_data = config.y_ds
-        elif right_out == 2:
-            config.right_raw_data = config.z_ds
-        elif right_out == 3:
-            config.right_raw_data = config.x_ml
-        elif right_out == 4:
-            config.right_raw_data = config.y_ml
-        else:
-            config.right_raw_data = config.z_ml
-        print('D2 right wheel raw output', config.right_raw_data)
+    # def mixing(self):
+    #     # TODO affect module proper - this moves to there
+    #
+    #     # quick mix TEMPORARY
+    #     left_out = random.randrange(6)
+    #     if left_out == 0:
+    #         config.left_raw_data = config.x_ds
+    #     elif left_out == 1:
+    #         config.left_raw_data = config.y_ds
+    #     elif left_out == 2:
+    #         config.left_raw_data = config.z_ds
+    #     elif left_out == 3:
+    #         config.left_raw_data = config.x_ml
+    #     elif left_out == 4:
+    #         config.left_raw_data = config.y_ml
+    #     else:
+    #         config.left_raw_data = config.z_ml
+    #     print('D1 left wheel raw output', config.left_raw_data)
+    #
+    #     right_out = random.randrange(6)
+    #     if right_out == 0:
+    #         config.right_raw_data = config.x_ds
+    #     elif right_out == 1:
+    #         config.right_raw_data = config.y_ds
+    #     elif right_out == 2:
+    #         config.right_raw_data = config.z_ds
+    #     elif right_out == 3:
+    #         config.right_raw_data = config.x_ml
+    #     elif right_out == 4:
+    #         config.right_raw_data = config.y_ml
+    #     else:
+    #         config.right_raw_data = config.z_ml
+    #     print('D2 right wheel raw output', config.right_raw_data)
 
     def end_time_calc(self, duration):
         # returns the end time for loops
@@ -244,22 +248,16 @@ class DatasetEngine():
         Calcs differences. Moves robot. Makes sound"""
         # if an affect flag happens this will break cycle
         while running:
-
-            # temporary mixing function
-            self.mixing()
-
             # how long we going to smooth at this rate?
             smoothing_dur = random.randrange(150, 1300) / 100
 
             # endtime calc
             end_time = self.end_time_calc(smoothing_dur)
 
-
-            # # send the data to smoothing and robot move
+            # send the data to smoothing and robot move
             self.bot.smooth(smoothing_dur, end_time)
-            print (f'D3 left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
 
-    def affect_mixing(self):
+    def affect_listening(self):
         time.sleep(1)
         CHUNK = 2 ** 11
         RATE = 22050
@@ -283,6 +281,19 @@ class DatasetEngine():
         self.stream.close()
         self.p.terminate()
 
+    def affect_mixing(self):
+        # new mix
+        self.affect.mixing()
+        # how long to stay in a mix
+        rnd_timing = (random.randrange(1000, 4000) / 1000)
+        loop_end = time.time() + rnd_timing
+
+        # hold mix until affect bang or end of cycle
+        for _ in range(int(loop_end) * 100):
+            if self.affect_interrupt:
+                continue
+            else:
+                time.sleep(0.01)
 
 if __name__ == '__main__':
     # instantiate the baudrate object
@@ -295,7 +306,7 @@ if __name__ == '__main__':
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
             p3 = executor.submit(dse.mlpredictions)
-            # todo move mixing to affect class
-            p4 = executor.submit(dse.affect_mixing)
-            p5 = executor.submit(dse.roboting)
+            p4 = executor.submit(dse.affect_listening)
+            p5 = executor.submit(dse.affect_mixing)
+            p6 = executor.submit(dse.roboting)
 
