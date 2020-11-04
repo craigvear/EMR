@@ -19,7 +19,7 @@ class DatasetEngine():
 
         # select the dataset file for this cycle
         dataset = self.which_dataset()
-        print('dataset = ', dataset)
+        print('A1. dataset = ', dataset)
 
         # send to list making function
         self.dataparsing(dataset)
@@ -41,11 +41,11 @@ class DatasetEngine():
 
             # how long to read a dataset file for this cycle
             dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
-            print(f'dataset choice duration = {dataset_choice_dur} seconds')
+            print(f'A2. dataset choice duration = {dataset_choice_dur} seconds')
 
             # select the dataset file for this cycle
             dataset = self.which_dataset()
-            print('dataset = ', dataset)
+            print('A3. dataset = ', dataset)
 
             # send to list making function
             self.dataparsing(dataset)
@@ -58,7 +58,7 @@ class DatasetEngine():
         with open(dataset) as f:
             reader = csv.reader(f)
 
-            # build the dataset as a working list for other threads
+            # reset & build the dataset as a working list for other threads
             self.data_list = []
 
             # converts strings into floats
@@ -67,7 +67,7 @@ class DatasetEngine():
 
                 # populate the working list
                 self.data_list.append(data)
-        print('converted dataset into float list')
+        print('A4 converted dataset into float list')
 
     def dataset_read(self):
         """picks a starting line and parses it"""
@@ -78,7 +78,7 @@ class DatasetEngine():
             dataset_read_dur = (random.randrange(3000, 13000)/ 1000)
 
             # sorts out durations
-            print('dataset line read duration = ', dataset_read_dur)
+            print('B1 dataset line read duration = ', dataset_read_dur)
             end_time = self.end_time_calc(dataset_read_dur)
 
             # prepare start line to read
@@ -101,19 +101,25 @@ class DatasetEngine():
     def line_to_read(self):
         # random line to start reading
         ds_len = len(self.data_list)
+
+        # dirty fix to avoid scheduling prob at start (data_list making)
+        if ds_len == 0:
+            ds_len = 100
+
         if ds_len > 7000:
             ds_len = 7000 # todo sort out the disparity of ds file lengths
+
         start_line_read = random.randrange(ds_len)
 
         # print out the details andf returns
-        print(f'dataset read start point for reading line {start_line_read}')
+        print(f'B2 dataset read start point for reading line {start_line_read}')
         return start_line_read
 
     def parse(self, parse_end_time, looped, starting_line, baudrate):
         # starting line is
         line_to_read = starting_line
         read_line = self.data_list[line_to_read]
-        print(f'reading line {read_line}, parse end time {parse_end_time}, '
+        print(f'B3 reading line {read_line}, parse end time {parse_end_time}, '
               f'looped {looped}, baudrate {baudrate}')
 
         # while the read set duration is active
@@ -131,7 +137,7 @@ class DatasetEngine():
                     config.x_ds = active_line[0]
                     config.y_ds = active_line[1]
                     config.z_ds = active_line[2]
-                    print('config ds ', config.x_ds, config.y_ds, config.z_ds)
+                    print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
                     line_to_read += 1
                     time.sleep(baudrate)
 
@@ -152,10 +158,10 @@ class DatasetEngine():
         # >= 5 =50% chance of looping
         if looped > 5:
             loop_duration = random.randrange(5, 15) / 10
-            print("loop duration = ", loop_duration)
+            print("B5 loop duration = ", loop_duration)
             return loop_duration
         else:
-            print('no loop')
+            print('B5 no loop')
             return 0
 
     def mlpredictions(self):
@@ -166,23 +172,23 @@ class DatasetEngine():
             ml_read_dur = (random.randrange(3000, 13000) / 1000)
             predict_rate = self.baudrate()
 
-            print('ml line read duration = ', ml_read_dur)
+            print('C1 ml line read duration = ', ml_read_dur)
             end_time = self.end_time_calc(ml_read_dur)
 
             while time.time() < end_time:
                 # passes ml_atom to RNN returns ml_predict
                 features = config.x_ds, config.y_ds, config.z_ds
-                print('send to df ', features)
+                print('C2 send to df ', features)
                 df_features = self.ml.make_df(features)
                 ml_predict = self.ml.ml_predictions(df_features)
-                print('ml prediction = ', ml_predict)
+                print('C3 ml prediction = ', ml_predict)
 
                 # parse the result into config
                 config.x_ml = ml_predict[0]
                 config.y_ml = ml_predict[1]
                 config.z_ml = ml_predict[2]
 
-                print('config ml ', config.x_ml, config.y_ml, config.z_ml)
+                print('C4 config ml ', config.x_ml, config.y_ml, config.z_ml)
                 # wait for baudrate to cycle
                 time.sleep(predict_rate)
 
@@ -203,7 +209,7 @@ class DatasetEngine():
             config.left_raw_data = config.y_ml
         else:
             config.left_raw_data = config.z_ml
-        print('left wheel raw output', config.left_raw_data)
+        print('D1 left wheel raw output', config.left_raw_data)
 
         right_out = random.randrange(6)
         if right_out == 0:
@@ -218,7 +224,7 @@ class DatasetEngine():
             config.right_raw_data = config.y_ml
         else:
             config.right_raw_data = config.z_ml
-        print('right wheel raw output', config.right_raw_data)
+        print('D2 right wheel raw output', config.right_raw_data)
 
     def end_time_calc(self, duration):
         # returns the end time for loops
@@ -242,7 +248,7 @@ class DatasetEngine():
 
             # # send the data to smoothing and robot move
             self.bot.smooth(smoothing_dur, end_time)
-            print (f'left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
+            print (f'D3 left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
 
 
 if __name__ == '__main__':

@@ -84,8 +84,8 @@ class Robot(): # smooths the data as a thread class
 
     def sound(self, bot_move_left, bot_move_right):
         # round incoming numbers to 2 dp
-        bot_move_left_round = round(bot_move_left, 3)
-        bot_move_right_round = round(bot_move_right, 3)
+        bot_move_left_round = round(bot_move_left, 2)
+        bot_move_right_round = round(bot_move_right, 2)
         # print (bot_move_left, bot_move_right)
         poss_length = int(self.audio_len - (self.interval))
 
@@ -124,7 +124,7 @@ class Robot(): # smooths the data as a thread class
         # print('play params = ', start_pos, dur_ms)
 
         if end_pos_ms > self.audio_len * 1000:
-            end_pos_ms = self.audio_len * 1000
+            end_pos_ms = self.audio_len * 1000 - 100
 
         # concats slicing data
         audio_slice = self.audio[start_pos: end_pos_ms]
@@ -137,4 +137,11 @@ class Robot(): # smooths the data as a thread class
 
     def calc_start_point(self, incoming, poss_length):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        return (((incoming - -1) * ((poss_length * 1000) - -1)) / (1.0 - -1)) + 0
+        start_pos = (((incoming - -1) * ((poss_length * 1000) - -1)) / (1.0 - -1)) + 0
+
+        # tidy up extremes to avoid SIGKILL errors
+        if start_pos > 76750:
+            start_pos = 76750
+        if start_pos < 0:
+            start_pos = 0
+        return start_pos
