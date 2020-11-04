@@ -81,6 +81,9 @@ class DatasetEngine():
         """picks a starting line and parses it"""
         # if an affect flag happens this will break cycle
         while running:
+            # grab current data_list and own it locally per cycle
+            # to avoid mid-parse changes
+            self.local_data_list = self.data_list
 
             # set a random duration for reading from random line
             dataset_read_dur = (random.randrange(3000, 13000)/ 1000)
@@ -108,14 +111,7 @@ class DatasetEngine():
 
     def line_to_read(self):
         # random line to start reading
-        ds_len = len(self.data_list)
-
-        # dirty fix to avoid scheduling prob at start (data_list making)
-        if ds_len == 0:
-            ds_len = 100
-
-        if ds_len > 7000:
-            ds_len = 7000 # todo sort out the disparity of ds file lengths
+        ds_len = len(self.local_data_list)
 
         start_line_read = random.randrange(ds_len)
 
@@ -127,11 +123,8 @@ class DatasetEngine():
         # starting line is
         line_to_read = starting_line
 
-        # make data_list local to avoid conflict with process A
-        local_data_list = self.data_list
-
         # print out starting line and details
-        read_line = local_data_list[line_to_read]
+        read_line = self.local_data_list[line_to_read]
         print(f'B3 reading line {read_line}, parse end time {parse_end_time}, '
               f'looped {looped}, baudrate {baudrate}')
 
@@ -146,7 +139,7 @@ class DatasetEngine():
 
                 # for each loop
                 while time.time() < loop_end:
-                    active_line = local_data_list[line_to_read]
+                    active_line = self.local_data_list[line_to_read]
                     config.x_ds = active_line[0]
                     config.y_ds = active_line[1]
                     config.z_ds = active_line[2]
@@ -157,7 +150,7 @@ class DatasetEngine():
 
             else:
                 # if no loop
-                active_line = local_data_list[line_to_read]
+                active_line = self.local_data_list[line_to_read]
                 config.x_ds = active_line[0]
                 config.y_ds = active_line[1]
                 config.z_ds = active_line[2]
@@ -302,6 +295,7 @@ if __name__ == '__main__':
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
             p3 = executor.submit(dse.mlpredictions)
+            # todo move mixing to affect class
             p4 = executor.submit(dse.affect_mixing)
             p5 = executor.submit(dse.roboting)
 
