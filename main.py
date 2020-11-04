@@ -17,12 +17,12 @@ class DatasetEngine():
     def __init__(self):
         self.affect_interrupt = False
 
-        # select the dataset file for this cycle
-        dataset = self.which_dataset()
-        print('A1. dataset = ', dataset)
+        # select the init dataset file for this cycle (have something in the pipe
+        init_dataset = self.which_dataset()
+        print('A1. init dataset = ', init_dataset)
 
         # send to list making function
-        self.dataparsing(dataset)
+        self.data_list = self.dataparsing(init_dataset)
 
         # set up ml
         self.ml = Predictions()
@@ -37,21 +37,26 @@ class DatasetEngine():
         """chooses a dataset file, parses into a list"""
 
         # if an affect flag happens this will break cycle
-        while not self.affect_interrupt:
+        while running:
 
             # select the dataset file for this cycle
             dataset = self.which_dataset()
             print('A2. dataset = ', dataset)
 
             # send to list making function
-            self.dataparsing(dataset)
+            self.data_list = self.dataparsing(dataset)
 
             # how long to read a dataset file for this cycle
             dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
             print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
 
             # wait for this process to timeout 6-26 seconds
-            time.sleep(dataset_choice_dur)
+            # time.sleep(dataset_choice_dur)
+            for _ in range (int(dataset_choice_dur) * 100):
+                if self.affect_interrupt:
+                    continue
+                else:
+                    time.sleep(0.01)
 
     def dataparsing(self, dataset):
         # takes the chosen dataset file and parses into list
@@ -59,20 +64,21 @@ class DatasetEngine():
             reader = csv.reader(f)
 
             # reset & build the dataset as a working list for other threads
-            self.data_list = []
+            data_list = []
 
             # converts strings into floats
             for row in reader:
                 data = [float(item) for item in row[2:]]
 
                 # populate the working list
-                self.data_list.append(data)
+                data_list.append(data)
         print('A3 converted dataset into float list')
+        return data_list
 
     def dataset_read(self):
         """picks a starting line and parses it"""
         # if an affect flag happens this will break cycle
-        while not self.affect_interrupt:
+        while running:
 
             # set a random duration for reading from random line
             dataset_read_dur = (random.randrange(3000, 13000)/ 1000)
@@ -118,7 +124,12 @@ class DatasetEngine():
     def parse(self, parse_end_time, looped, starting_line, baudrate):
         # starting line is
         line_to_read = starting_line
-        read_line = self.data_list[line_to_read]
+
+        # make data_list local to avoid conflict with process A
+        local_data_list = self.data_list
+
+        # print out starting line and details
+        read_line = local_data_list[line_to_read]
         print(f'B3 reading line {read_line}, parse end time {parse_end_time}, '
               f'looped {looped}, baudrate {baudrate}')
 
@@ -133,7 +144,7 @@ class DatasetEngine():
 
                 # for each loop
                 while time.time() < loop_end:
-                    active_line = self.data_list[line_to_read]
+                    active_line = local_data_list[line_to_read]
                     config.x_ds = active_line[0]
                     config.y_ds = active_line[1]
                     config.z_ds = active_line[2]
@@ -144,7 +155,7 @@ class DatasetEngine():
 
             else:
                 # if no loop
-                active_line = self.data_list[line_to_read]
+                active_line = local_data_list[line_to_read]
                 config.x_ds = active_line[0]
                 config.y_ds = active_line[1]
                 config.z_ds = active_line[2]
@@ -169,7 +180,7 @@ class DatasetEngine():
     def mlpredictions(self):
         """makes a RNN prediction and parses it"""
         # if an affect flag happens this will break cycle
-        while not self.affect_interrupt:
+        while running:
             # set a random duration for reading from random line
             ml_read_dur = (random.randrange(3000, 13000) / 1000)
             predict_rate = self.baudrate()
@@ -237,7 +248,7 @@ class DatasetEngine():
         """smooths output from raw data generation.
         Calcs differences. Moves robot. Makes sound"""
         # if an affect flag happens this will break cycle
-        while not self.affect_interrupt:
+        while running:
 
             # temporary mixing function
             self.mixing()
@@ -248,9 +259,21 @@ class DatasetEngine():
             # endtime calc
             end_time = self.end_time_calc(smoothing_dur)
 
+
             # # send the data to smoothing and robot move
             self.bot.smooth(smoothing_dur, end_time)
             print (f'D3 left wheel = {config.left_wheel_move}, right wheel = {config.right_wheel_move}')
+
+
+    def affect_mixing(self):
+        while running:
+            time.sleep(2)
+            self.affect_interrupt = True
+            print('##############################    AFFECT BANG  ###########################')
+
+            # hold bang for 0.02 so all waits catch it (which are 0.01!!)
+            time.sleep(0.02)
+            self.affect_interrupt = False
 
 
 if __name__ == '__main__':
@@ -258,12 +281,12 @@ if __name__ == '__main__':
     dse = DatasetEngine()
 
     # while the program is running
-    while running:
+    while True:
+        running = True
         with concurrent.futures.ThreadPoolExecutor() as executor:
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
-            # TODO B flips out - merge A & B????
             p3 = executor.submit(dse.mlpredictions)
-            # # p4 = executor.submit(dse.affect_mixing)
+            p4 = executor.submit(dse.affect_mixing)
             p5 = executor.submit(dse.roboting)
 

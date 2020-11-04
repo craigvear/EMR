@@ -83,9 +83,9 @@ class Robot(): # smooths the data as a thread class
         return bot_move_left, bot_move_right
 
     def sound(self, bot_move_left, bot_move_right):
-        # round incoming numbers to 2 dp
-        bot_move_left_round = round(bot_move_left, 2)
-        bot_move_right_round = round(bot_move_right, 2)
+        # round incoming numbers to 3 dp
+        bot_move_left_round = round(bot_move_left, 3)
+        bot_move_right_round = round(bot_move_right, 3)
         # print (bot_move_left, bot_move_right)
         poss_length = int(self.audio_len - (self.interval))
 
