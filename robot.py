@@ -137,7 +137,7 @@ class Robot(): # smooths the data as a thread class
 
     def calc_start_point(self, incoming, poss_length):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        start_pos = (((incoming - -1) * ((poss_length * 1000) - -1)) / (1.0 - -1)) + 0
+        start_pos = (((incoming - -2) * ((poss_length * 1000) - -2)) / (2.0 - -2)) + 0
 
         # tidy up extremes to avoid SIGKILL errors
         if start_pos > 76750:

@@ -39,16 +39,16 @@ class DatasetEngine():
         # if an affect flag happens this will break cycle
         while not self.affect_interrupt:
 
-            # how long to read a dataset file for this cycle
-            dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
-            print(f'A2. dataset choice duration = {dataset_choice_dur} seconds')
-
             # select the dataset file for this cycle
             dataset = self.which_dataset()
-            print('A3. dataset = ', dataset)
+            print('A2. dataset = ', dataset)
 
             # send to list making function
             self.dataparsing(dataset)
+
+            # how long to read a dataset file for this cycle
+            dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
+            print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
 
             # wait for this process to timeout 6-26 seconds
             time.sleep(dataset_choice_dur)
@@ -67,7 +67,7 @@ class DatasetEngine():
 
                 # populate the working list
                 self.data_list.append(data)
-        print('A4 converted dataset into float list')
+        print('A3 converted dataset into float list')
 
     def dataset_read(self):
         """picks a starting line and parses it"""
@@ -77,12 +77,12 @@ class DatasetEngine():
             # set a random duration for reading from random line
             dataset_read_dur = (random.randrange(3000, 13000)/ 1000)
 
+            # prepare start line to read
+            starting_line = self.line_to_read()
+
             # sorts out durations
             print('B1 dataset line read duration = ', dataset_read_dur)
             end_time = self.end_time_calc(dataset_read_dur)
-
-            # prepare start line to read
-            starting_line = self.line_to_read()
 
             # determine if read is to be looped or sequential
             looped = self.is_loop()
@@ -139,6 +139,7 @@ class DatasetEngine():
                     config.z_ds = active_line[2]
                     print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
                     line_to_read += 1
+                    print(f'********  line to read {line_to_read}')
                     time.sleep(baudrate)
 
             else:
@@ -147,8 +148,9 @@ class DatasetEngine():
                 config.x_ds = active_line[0]
                 config.y_ds = active_line[1]
                 config.z_ds = active_line[2]
-                print('config ds ', config.x_ds, config.y_ds, config.z_ds)
+                print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
                 line_to_read += 1
+                print(f'********  line to read {line_to_read}')
                 time.sleep(baudrate)
 
     def is_loop(self):
@@ -260,6 +262,7 @@ if __name__ == '__main__':
         with concurrent.futures.ThreadPoolExecutor() as executor:
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
+            # TODO B flips out - merge A & B????
             p3 = executor.submit(dse.mlpredictions)
             # # p4 = executor.submit(dse.affect_mixing)
             p5 = executor.submit(dse.roboting)
