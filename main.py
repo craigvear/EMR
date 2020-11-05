@@ -151,7 +151,6 @@ class DatasetEngine():
                     line_to_read += 1
                     print(f'********  line to read {line_to_read}')
                     time.sleep(baudrate)
-
             else:
                 # if no loop
                 active_line = self.local_data_list[line_to_read]
@@ -230,6 +229,8 @@ class DatasetEngine():
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
                         frames_per_buffer=CHUNK)
+        random_probability = 0.3
+
         while running:
             data = np.frombuffer(self.stream.read(CHUNK), dtype=np.int16)
             peak = np.average(np.abs(data)) * 2
@@ -237,7 +238,7 @@ class DatasetEngine():
             # print("%05d %s" % (peak, bars))
 
             # interrupts processes if medium sound affects (routing matrix only)
-            if 4000 < peak < 6000:
+            if 6000 < peak < 10000:
                 self.mix_interrupt = True
                 print('##############################    MIX INTERRUPT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
@@ -246,7 +247,7 @@ class DatasetEngine():
 
             # interrupts processes if loud sound affects
             # (routing matrix and main dataset file selection (new train of thought))
-            elif peak > 6001:
+            elif peak > 10001:
                 self.affect_interrupt = True
                 print('##############################    AFFECT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
