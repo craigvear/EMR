@@ -247,7 +247,7 @@ class DatasetEngine():
 
             # interrupts processes if loud sound affects
             # (routing matrix and main dataset file selection (new train of thought))
-            elif peak > 10001:
+            elif random.random() > random_probability and peak > 10001:
                 self.affect_interrupt = True
                 print('##############################    AFFECT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
