@@ -32,10 +32,10 @@ class Robot(): # smooths the data as a thread class
             # smoothing algo from Max/MSP slide object
             # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
 
-            current_l = config.left_wheel_move
-            target_l = config.left_raw_data
-            current_r = config.right_wheel_move
-            target_r = config.right_raw_data
+            current_l = config.left_wheel_move_from_smoothing
+            target_l = config.left_raw_data_from_affect_mix
+            current_r = config.right_wheel_move_from_smoothing
+            target_r = config.right_raw_data_from_affect_mix
 
             duration = smoothing_dur
             self.interval = duration / division_factor
@@ -53,8 +53,8 @@ class Robot(): # smooths the data as a thread class
                 current_r += increment_value_r
 
                 # wheel movement = adjsted value
-                config.left_wheel_move = current_l
-                config.right_wheel_move = current_r
+                config.left_wheel_move_from_smoothing = current_l
+                config.right_wheel_move_from_smoothing = current_r
 
                 # make the robot move and sound
                 self.robot()
@@ -69,8 +69,8 @@ class Robot(): # smooths the data as a thread class
 
     def calc_deviation(self):
         # sets up temp vars for current params
-        left = config.left_wheel_move
-        right = config.right_wheel_move
+        left = config.left_wheel_move_from_smoothing
+        right = config.right_wheel_move_from_smoothing
 
         # subtracts new from old and difference = wheel move
         bot_move_left = left - self.old_left

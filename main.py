@@ -13,12 +13,12 @@ from robot import Robot
 # setting up global vars
 dataset_list = glob.glob('dataset/*.csv')
 running = True
-affect_interrupt = False # todo replace with traitlet?
 
 class DatasetEngine():
     # conductor for the macro timings for ds read
     def __init__(self):
         self.affect_interrupt = False
+        self.mix_interrupt = False
 
         # select the init dataset file for this cycle (have something in the pipe
         init_dataset = self.which_dataset()
@@ -204,40 +204,6 @@ class DatasetEngine():
                 # wait for baudrate to cycle
                 time.sleep(predict_rate)
 
-    # def mixing(self):
-    #     # TODO affect module proper - this moves to there
-    #
-    #     # quick mix TEMPORARY
-    #     left_out = random.randrange(6)
-    #     if left_out == 0:
-    #         config.left_raw_data = config.x_ds
-    #     elif left_out == 1:
-    #         config.left_raw_data = config.y_ds
-    #     elif left_out == 2:
-    #         config.left_raw_data = config.z_ds
-    #     elif left_out == 3:
-    #         config.left_raw_data = config.x_ml
-    #     elif left_out == 4:
-    #         config.left_raw_data = config.y_ml
-    #     else:
-    #         config.left_raw_data = config.z_ml
-    #     print('D1 left wheel raw output', config.left_raw_data)
-    #
-    #     right_out = random.randrange(6)
-    #     if right_out == 0:
-    #         config.right_raw_data = config.x_ds
-    #     elif right_out == 1:
-    #         config.right_raw_data = config.y_ds
-    #     elif right_out == 2:
-    #         config.right_raw_data = config.z_ds
-    #     elif right_out == 3:
-    #         config.right_raw_data = config.x_ml
-    #     elif right_out == 4:
-    #         config.right_raw_data = config.y_ml
-    #     else:
-    #         config.right_raw_data = config.z_ml
-    #     print('D2 right wheel raw output', config.right_raw_data)
-
     def end_time_calc(self, duration):
         # returns the end time for loops
         now_time = time.time()
@@ -269,12 +235,24 @@ class DatasetEngine():
             peak = np.average(np.abs(data)) * 2
             # bars = "#" * int(50 * peak / 2 ** 16)
             # print("%05d %s" % (peak, bars))
-            if peak > 4000:
+
+            # interrupts processes if medium sound affects (routing matrix only)
+            if 4000 < peak < 6000:
+                self.mix_interrupt = True
+                print('##############################    MIX INTERRUPT BANG  ###########################')
+                # hold bang for 0.02 so all waits catch it (which are 0.01!!)
+                time.sleep(0.02)
+                self.mix_interrupt = False
+
+            # interrupts processes if loud sound affects
+            # (routing matrix and main dataset file selection (new train of thought))
+            elif peak > 6001:
                 self.affect_interrupt = True
                 print('##############################    AFFECT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
                 time.sleep(0.02)
                 self.affect_interrupt = False
+
         self.snd_listen_terminate()
 
     def snd_listen_terminate(self):
@@ -283,17 +261,23 @@ class DatasetEngine():
         self.p.terminate()
 
     def affect_mixing(self):
-        # new mix
-        self.affect.mixing()
-        # how long to stay in a mix
-        rnd_timing = (random.randrange(1000, 4000) / 1000)
-        loop_end = time.time() + rnd_timing
-        # todo problem here !!!!!!!!
-        # hold mix until affect bang or end of cycle
-        for _ in range(int(loop_end) * 100):
-            if self.affect_interrupt:
-                continue
-            else:
+        while running:
+
+            # command a new mix
+            self.affect.mixing()
+
+            # how long to stay in a mix 1 - 4 seconds
+            rnd_timing = (random.randrange(1000, 4000) / 1000)
+            print (rnd_timing, (int(rnd_timing * 100)))
+
+            # hold mix until affect bang or end of cycle
+            for _ in range(int(rnd_timing) * 100):
+                # break if loud sound affects flow
+                if self.affect_interrupt:
+                    break
+                # break if medium sound affects flow
+                elif self.mix_interrupt:
+                    break
                 time.sleep(0.01)
 
 if __name__ == '__main__':
