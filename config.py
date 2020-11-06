@@ -1,7 +1,7 @@
 """ config all global variable to share across classes"""
 
-dataset = 'training/raw_phase1_dataset.csv'
-working_datafile_name = 'empty'
+# global interrupt flag
+affect_interrupt = False
 
 # variable for dataset parsing
 x_ds = 0.5
