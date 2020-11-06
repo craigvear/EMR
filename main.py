@@ -22,7 +22,7 @@ class DatasetEngine():
 
         # select the init dataset file for this cycle (have something in the pipe
         init_dataset = self.which_dataset()
-        print('A1. init dataset = ', init_dataset)
+        # print('A1. init dataset = ', init_dataset)
 
         # send to list making function
         self.data_list = self.dataparsing(init_dataset)
@@ -47,14 +47,14 @@ class DatasetEngine():
 
             # select the dataset file for this cycle
             dataset = self.which_dataset()
-            print('A2. dataset = ', dataset)
+            # print('A2. dataset = ', dataset)
 
             # send to list making function
             self.data_list = self.dataparsing(dataset)
 
             # how long to read a dataset file for this cycle
             dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
-            print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
+            # print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
 
             # wait for this process to timeout 6-26 seconds
             # time.sleep(dataset_choice_dur)
@@ -78,7 +78,7 @@ class DatasetEngine():
 
                 # populate the working list
                 data_list.append(data)
-        print('A3 converted dataset into float list')
+        # print('A3 converted dataset into float list')
         return data_list
 
     def dataset_read(self):
@@ -96,7 +96,7 @@ class DatasetEngine():
             starting_line = self.line_to_read()
 
             # sorts out durations
-            print('B1 dataset line read duration = ', dataset_read_dur)
+            # print('B1 dataset line read duration = ', dataset_read_dur)
             end_time = self.end_time_calc(dataset_read_dur)
 
             # determine if read is to be looped or sequential
@@ -120,7 +120,7 @@ class DatasetEngine():
         start_line_read = random.randrange(ds_len)
 
         # print out the details andf returns
-        print(f'B2 dataset read start point for reading line {start_line_read}')
+        # print(f'B2 dataset read start point for reading line {start_line_read}')
         return start_line_read
 
     def parse(self, parse_end_time, looped, starting_line, baudrate):
@@ -129,8 +129,8 @@ class DatasetEngine():
 
         # print out starting line and details
         read_line = self.local_data_list[line_to_read]
-        print(f'B3 reading line {read_line}, parse end time {parse_end_time}, '
-              f'looped {looped}, baudrate {baudrate}')
+        # print(f'B3 reading line {read_line}, parse end time {parse_end_time}, '
+        #       f'looped {looped}, baudrate {baudrate}')
 
         # while the read set duration is active
         while time.time() < parse_end_time:
@@ -147,9 +147,9 @@ class DatasetEngine():
                     config.x_ds = active_line[0]
                     config.y_ds = active_line[1]
                     config.z_ds = active_line[2]
-                    print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
+                    # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
                     line_to_read += 1
-                    print(f'********  line to read {line_to_read}')
+                    # print(f'********  line to read {line_to_read}')
                     time.sleep(baudrate)
             else:
                 # if no loop
@@ -157,9 +157,9 @@ class DatasetEngine():
                 config.x_ds = active_line[0]
                 config.y_ds = active_line[1]
                 config.z_ds = active_line[2]
-                print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
+                # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
                 line_to_read += 1
-                print(f'********  line to read {line_to_read}')
+                # print(f'********  line to read {line_to_read}')
                 time.sleep(baudrate)
 
     def is_loop(self):
@@ -169,10 +169,10 @@ class DatasetEngine():
         # >= 5 =50% chance of looping
         if looped > 5:
             loop_duration = random.randrange(5, 15) / 10
-            print("B5 loop duration = ", loop_duration)
+            # print("B5 loop duration = ", loop_duration)
             return loop_duration
         else:
-            print('B5 no loop')
+            # print('B5 no loop')
             return 0
 
     def mlpredictions(self):
@@ -183,16 +183,16 @@ class DatasetEngine():
             ml_read_dur = (random.randrange(3000, 13000) / 1000)
             predict_rate = self.baudrate()
 
-            print('C1 ml line read duration = ', ml_read_dur)
+            # print('C1 ml line read duration = ', ml_read_dur)
             end_time = self.end_time_calc(ml_read_dur)
 
             while time.time() < end_time:
                 # passes ml_atom to RNN returns ml_predict
                 features = config.x_ds, config.y_ds, config.z_ds
-                print('C2 send to df ', features)
+                # print('C2 send to df ', features)
                 df_features = self.ml.make_df(features)
                 ml_predict = self.ml.ml_predictions(df_features)
-                print('C3 ml prediction = ', ml_predict)
+                # print('C3 ml prediction = ', ml_predict)
 
                 # parse the result into config
                 config.x_ml = ml_predict[0]
@@ -240,7 +240,7 @@ class DatasetEngine():
             # interrupts processes if medium sound affects (routing matrix only)
             if 6000 < peak < 10000:
                 self.mix_interrupt = True
-                print('##############################    MIX INTERRUPT BANG  ###########################')
+                # print('##############################    MIX INTERRUPT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
                 time.sleep(0.02)
                 self.mix_interrupt = False
@@ -249,7 +249,7 @@ class DatasetEngine():
             # (routing matrix and main dataset file selection (new train of thought))
             elif random.random() > random_probability and peak > 10001:
                 self.affect_interrupt = True
-                print('##############################    AFFECT BANG  ###########################')
+                # print('##############################    AFFECT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
                 time.sleep(0.02)
                 self.affect_interrupt = False
@@ -269,7 +269,7 @@ class DatasetEngine():
 
             # how long to stay in a mix 1 - 4 seconds
             rnd_timing = (random.randrange(1000, 4000) / 1000)
-            print (rnd_timing, (int(rnd_timing * 100)))
+            # print (rnd_timing, (int(rnd_timing * 100)))
 
             # hold mix until affect bang or end of cycle
             for _ in range(int(rnd_timing) * 100):

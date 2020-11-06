@@ -25,7 +25,7 @@ class Robot(): # smooths the data as a thread class
     def smooth(self, smoothing_dur, end_time):
         # define a division rhythm for increments this cycle
         division_factor = randrange(10, 100)
-        print('div factor', division_factor)
+        # print('div factor', division_factor)
 
         # slide between them at bang_timer ms per step
         while time.time() < end_time:
@@ -42,6 +42,7 @@ class Robot(): # smooths the data as a thread class
 
             # number of increments
             noi = duration / self.interval
+            print(f'interval  {self.interval}, noi = {noi}')
 
             # split the delta w/ noi
             increment_value_l = (target_l - current_l) / noi
@@ -51,6 +52,7 @@ class Robot(): # smooths the data as a thread class
             for _ in range(int(noi)):
                 current_l += increment_value_l
                 current_r += increment_value_r
+                print(f'smoothing {current_l},   {current_r}')
 
                 # wheel movement = adjsted value
                 config.left_wheel_move_from_smoothing = current_l
@@ -84,6 +86,7 @@ class Robot(): # smooths the data as a thread class
 
     def sound(self, bot_move_left, bot_move_right):
         # round incoming numbers to 3 dp
+        print(f'incoming wheel data = {bot_move_left},   {bot_move_left}')
         bot_move_left_round = round(bot_move_left, 3)
         bot_move_right_round = round(bot_move_right, 3)
         # print (bot_move_left, bot_move_right)
@@ -121,7 +124,7 @@ class Robot(): # smooths the data as a thread class
         # adds a bit of overlap with audio threading
         dur_ms = self.interval * 1000 # + 100
         end_pos_ms = start_pos + dur_ms
-        # print('play params = ', start_pos, dur_ms)
+        print('play params = ', start_pos, dur_ms)
 
         if end_pos_ms > self.audio_len * 1000:
             end_pos_ms = self.audio_len * 1000 - 100
@@ -137,11 +140,12 @@ class Robot(): # smooths the data as a thread class
 
     def calc_start_point(self, incoming, poss_length):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        start_pos = (((incoming - -2) * ((poss_length * 1000) - -2)) / (2.0 - -2)) + 0
+        start_pos = (((incoming - -1) * ((poss_length * 1000) - 0)) / (1 - -1)) + 0
 
         # tidy up extremes to avoid SIGKILL errors
-        if start_pos > 76750:
-            start_pos = 76750
+        if start_pos > poss_length * 1000:
+            start_pos = poss_length * 1000 - 1000
         if start_pos < 0:
             start_pos = 0
+        print (f'incoming = {incoming},  poss length = {poss_length} start position from new calc = {start_pos}')
         return start_pos
