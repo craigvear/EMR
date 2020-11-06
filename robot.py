@@ -10,7 +10,7 @@ takes the stored variables in config, and mixes then then smooths output
 class Robot(): # smooths the data as a thread class
     def __init__(self):
         # audio source variables
-        audio_file = ('data/jarrett_snippet.wav')
+        audio_file = ('spleeter/giant_steps.wav')
         self.audio = AudioSegment.from_wav(audio_file)
         self.audio_len = self.audio.duration_seconds
         print('audio length (secs) = ', self.audio_len)
