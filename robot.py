@@ -10,7 +10,7 @@ takes the stored variables in config, and mixes then then smooths output
 class Robot(): # smooths the data as a thread class
     def __init__(self):
         # audio source variables
-        audio_file = ('spleeter/giant_steps.wav')
+        audio_file = ('spleeter/output/giant_steps/drums.wav')
         self.audio = AudioSegment.from_wav(audio_file)
         self.audio_len = self.audio.duration_seconds
         print('audio length (secs) = ', self.audio_len)
@@ -24,7 +24,8 @@ class Robot(): # smooths the data as a thread class
 
     def smooth(self, smoothing_dur, end_time):
         # define a division rhythm for increments this cycle
-        division_factor = randrange(10, 100)
+        _factor = randrange(1, 20)
+        division_factor = _factor * randrange(5)
         print('div factor', division_factor)
 
         # slide between them at bang_timer ms per step
@@ -60,6 +61,9 @@ class Robot(): # smooths the data as a thread class
 
                 # make the robot move and sound
                 self.robot()
+
+                if config.affect_interrupt:
+                    break
 
     def robot(self):
         # calculate derivation in data for each wheel

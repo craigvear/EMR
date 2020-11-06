@@ -250,10 +250,12 @@ class DatasetEngine():
             # (routing matrix and main dataset file selection (new train of thought))
             elif random.random() > random_probability and peak > 10001:
                 self.affect_interrupt = True
+                config.affect_interrupt = True
                 print('##############################    AFFECT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
                 time.sleep(0.02)
                 self.affect_interrupt = False
+                config.affect_interrupt = False
 
         self.snd_listen_terminate()
 
