@@ -25,7 +25,7 @@ class Robot(): # smooths the data as a thread class
     def smooth(self, smoothing_dur, end_time):
         # define a division rhythm for increments this cycle
         division_factor = randrange(10, 100)
-        # print('div factor', division_factor)
+        print('div factor', division_factor)
 
         # slide between them at bang_timer ms per step
         while time.time() < end_time:
@@ -66,7 +66,7 @@ class Robot(): # smooths the data as a thread class
         bot_move_left, bot_move_right = self.calc_deviation()
 
         # robot.set_motors(bot_move_left, bot_move_right)
-        # print('moving robot', bot_move_left, bot_move_right)
+        print('moving robot', bot_move_left, bot_move_right)
         self.sound(bot_move_left, bot_move_right)
 
     def calc_deviation(self):
