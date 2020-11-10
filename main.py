@@ -41,20 +41,18 @@ class DatasetEngine():
 
     def dataset_choice(self):
         """chooses a dataset file, parses into a list"""
-
-        # if an affect flag happens this will break cycle
         while running:
 
             # select the dataset file for this cycle
             dataset = self.which_dataset()
-            print('A2. dataset = ', dataset)
+            # print('A2. dataset = ', dataset)
 
             # send to list making function
             self.data_list = self.dataparsing(dataset)
 
             # how long to read a dataset file for this cycle
             dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
-            print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
+            # print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
 
             # wait for this process to timeout 6-26 seconds
             # time.sleep(dataset_choice_dur)
@@ -78,12 +76,11 @@ class DatasetEngine():
 
                 # populate the working list
                 data_list.append(data)
-        print('A3 converted dataset into float list')
+        # print('A3 converted dataset into float list')
         return data_list
 
     def dataset_read(self):
         """picks a starting line and parses it"""
-        # if an affect flag happens this will break cycle
         while running:
             # grab current data_list and own it locally per cycle
             # to avoid mid-parse changes
@@ -102,11 +99,31 @@ class DatasetEngine():
             # determine if read is to be looped or sequential
             looped = self.is_loop()
 
-            # calc baudrate
-            baudrate = self.baudrate()
+            while time.time() < end_time:
+                # calc baudrate and cycle clock
+                baudrate = self.baudrate()
 
-            # parse lines of dataset for duration
-            self.parse(end_time, looped, starting_line, baudrate)
+                # if looped
+                if looped > 0:
+                    loop_end = time.time() + looped
+
+                    # reset the start read point
+                    line_to_read = starting_line
+
+                    # for each loop
+                    while time.time() < loop_end:
+                        active_line = self.local_data_list[line_to_read]
+                        self.parse_active_line(active_line)
+                        line_to_read += 1
+                        print(f'********  line to read {line_to_read}')
+                        time.sleep(baudrate)
+                else:
+                    # if no loop
+                    active_line = self.local_data_list[starting_line]
+                    self.parse_active_line(active_line)
+                    starting_line += 1
+                    print(f'********  line to read {starting_line}')
+                    time.sleep(baudrate)
 
     def baudrate(self):
         # calculates the baudrate for reading 3-13 seconds
@@ -120,47 +137,47 @@ class DatasetEngine():
         start_line_read = random.randrange(ds_len)
 
         # print out the details andf returns
-        print(f'B2 dataset read start point for reading line {start_line_read}')
+        # print(f'B2 dataset read start point for reading line {start_line_read}')
         return start_line_read
 
-    def parse(self, parse_end_time, looped, starting_line, baudrate):
-        # starting line is
-        line_to_read = starting_line
-
-        # print out starting line and details
-        read_line = self.local_data_list[line_to_read]
-        print(f'B3 reading line {read_line}, parse end time {parse_end_time} '
-              f'looped {looped}, baudrate {baudrate}')
-
-        # while the read set duration is active
-        while time.time() < parse_end_time:
-            # if looped
-            if looped > 0:
-                loop_end = time.time() + looped
-
-                # reset the start read point
-                line_to_read = starting_line
-
-                # for each loop
-                while time.time() < loop_end:
-                    active_line = self.local_data_list[line_to_read]
-                    self.parse_active_line(active_line)
-                    line_to_read += 1
-                    print(f'********  line to read {line_to_read}')
-                    time.sleep(baudrate)
-            else:
-                # if no loop
-                active_line = self.local_data_list[line_to_read]
-                self.parse_active_line(active_line)
-                line_to_read += 1
-                print(f'********  line to read {line_to_read}')
-                time.sleep(baudrate)
+    # def parse(self, parse_end_time, looped, starting_line, baudrate):
+    #     # starting line is
+    #     line_to_read = starting_line
+    #
+    #     # print out starting line and details
+    #     read_line = self.local_data_list[line_to_read]
+    #     # print(f'B3 reading line {read_line}, parse end time {parse_end_time} '
+    #     #       f'looped {looped}, baudrate {baudrate}')
+    #
+    #     # while the read set duration is active
+    #     while time.time() < parse_end_time:
+    #         # if looped
+    #         if looped > 0:
+    #             loop_end = time.time() + looped
+    #
+    #             # reset the start read point
+    #             line_to_read = starting_line
+    #
+    #             # for each loop
+    #             while time.time() < loop_end:
+    #                 active_line = self.local_data_list[line_to_read]
+    #                 self.parse_active_line(active_line)
+    #                 line_to_read += 1
+    #                 # print(f'********  line to read {line_to_read}')
+    #                 time.sleep(baudrate)
+    #         else:
+    #             # if no loop
+    #             active_line = self.local_data_list[line_to_read]
+    #             self.parse_active_line(active_line)
+    #             line_to_read += 1
+    #             # print(f'********  line to read {line_to_read}')
+    #             time.sleep(baudrate)
 
     def parse_active_line(self, active_line):
         config.x_ds = active_line[0]
         config.y_ds = active_line[1]
         config.z_ds = active_line[2]
-        print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
+        # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
 
 
     def is_loop(self):
@@ -170,10 +187,10 @@ class DatasetEngine():
         # >= 5 =50% chance of looping
         if looped > 5:
             loop_duration = random.randrange(5, 15) / 10
-            print("B5 loop duration = ", loop_duration)
+            # print("B5 loop duration = ", loop_duration)
             return loop_duration
         else:
-            print('B5 no loop')
+            # print('B5 no loop')
             return 0
 
     def mlpredictions(self):
@@ -182,12 +199,15 @@ class DatasetEngine():
         while running:
             # set a random duration for reading from random line
             ml_read_dur = (random.randrange(3000, 13000) / 1000)
-            predict_rate = self.baudrate()
+            # predict_rate = self.baudrate()
 
             # print('C1 ml line read duration = ', ml_read_dur)
             end_time = self.end_time_calc(ml_read_dur)
 
             while time.time() < end_time:
+                # calcs baudrate every cycle
+                predict_rate = self.baudrate()
+
                 # passes ml_atom to RNN returns ml_predict
                 features = config.x_ds, config.y_ds, config.z_ds
                 print('C2 send to df ', features)
@@ -288,6 +308,8 @@ if __name__ == '__main__':
     # instantiate the baudrate object
     dse = DatasetEngine()
 
+    # dse.dataset_read()
+
     # while the program is running
     while True:
         running = True
@@ -297,4 +319,4 @@ if __name__ == '__main__':
             p3 = executor.submit(dse.mlpredictions)
             p4 = executor.submit(dse.affect_listening)
             p5 = executor.submit(dse.affect_mixing)
-            p6 = executor.submit(dse.roboting)
+            # p6 = executor.submit(dse.roboting)

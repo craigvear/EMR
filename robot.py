@@ -10,7 +10,7 @@ takes the stored variables in config, and mixes then then smooths output
 class Robot(): # smooths the data as a thread class
     def __init__(self):
         # audio source variables
-        audio_file = ('spleeter/output/giant_steps/drums.wav')
+        audio_file = ('spleeter/output/giant_steps/bass.wav')
         self.audio = AudioSegment.from_wav(audio_file)
         self.audio_len = self.audio.duration_seconds
         print('audio length (secs) = ', self.audio_len)
@@ -25,7 +25,7 @@ class Robot(): # smooths the data as a thread class
     def smooth(self, smoothing_dur, end_time):
         # define a division rhythm for increments this cycle
         _factor = randrange(1, 20)
-        division_factor = _factor * randrange(5)
+        division_factor = _factor * randrange(10)
         print('div factor', division_factor)
 
         # slide between them at bang_timer ms per step
@@ -63,6 +63,7 @@ class Robot(): # smooths the data as a thread class
                 self.robot()
 
                 if config.affect_interrupt:
+                    time.sleep(0.1)
                     break
 
     def robot(self):
@@ -91,8 +92,8 @@ class Robot(): # smooths the data as a thread class
     def sound(self, bot_move_left, bot_move_right):
         # round incoming numbers to 3 dp
         print(f'incoming wheel data = {bot_move_left},   {bot_move_left}')
-        bot_move_left_round = round(bot_move_left, 3)
-        bot_move_right_round = round(bot_move_right, 3)
+        bot_move_left_round = round(bot_move_left, 4)
+        bot_move_right_round = round(bot_move_right, 4)
         # print (bot_move_left, bot_move_right)
         poss_length = int(self.audio_len - (self.interval))
 
@@ -127,7 +128,7 @@ class Robot(): # smooths the data as a thread class
     def play_sound(self, start_pos):
         # adds a bit of overlap with audio threading
         dur_ms = self.interval * 1000 # + 100
-        end_pos_ms = start_pos + dur_ms
+        end_pos_ms = start_pos + (dur_ms /10)
         print('play params = ', start_pos, dur_ms)
 
         if end_pos_ms > self.audio_len * 1000:
