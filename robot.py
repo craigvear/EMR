@@ -25,31 +25,31 @@ class Robot(): # smooths the data as a thread class
     def robot(self, data_density):
         self.data_density = data_density
 
-        # # calculate derivation in data for each wheel
-        # bot_move_left, bot_move_right = self.calc_deviation()
+        # calculate derivation in data for each wheel
+        bot_move_left, bot_move_right = self.calc_deviation()
 
-        # grabs raw data from config file
-        bot_move_left = config.left_raw_data_from_affect_mix
-        bot_move_right = config.right_raw_data_from_affect_mix
+        # # grabs raw data from config file
+        # bot_move_left = config.left_wheel_move_from_smoothing
+        # bot_move_right = config.right_wheel_move_from_smoothing
 
         # robot.set_motors(bot_move_left, bot_move_right)
         print('moving robot', bot_move_left, bot_move_right)
         self.sound(bot_move_left, bot_move_right)
 
-    # def calc_deviation(self):
-    #     # sets up temp vars for current params
-    #     left = config.left_raw_data_from_affect_mix
-    #     right = config.right_raw_data_from_affect_mix
-    #
-    #     # subtracts new from old and difference = wheel move
-    #     bot_move_left = left - self.old_left
-    #     bot_move_right = right - self.old_right
-    #
-    #     # make old vars the current move vars
-    #     config.old_left = bot_move_left
-    #     config.old_right = bot_move_right
-    #
-    #     return bot_move_left, bot_move_right
+    def calc_deviation(self):
+        # sets up temp vars for current params
+        left = config.left_wheel_move_from_smoothing
+        right = config.right_wheel_move_from_smoothing
+
+        # subtracts new from old and difference = wheel move
+        bot_move_left = left - self.old_left
+        bot_move_right = right - self.old_right
+
+        # make old vars the current move vars
+        config.old_left = bot_move_left
+        config.old_right = bot_move_right
+
+        return bot_move_left, bot_move_right
 
     def sound(self, bot_move_left, bot_move_right):
 
@@ -63,12 +63,12 @@ class Robot(): # smooths the data as a thread class
         # send params to play func
         self.play_sound(start_pos_ms)
 
-        # right wheel sounding
-        # calc start position
-        start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
-
-        # send params to play func
-        self.play_sound(start_pos_ms)
+        # # right wheel sounding
+        # # calc start position
+        # start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
+        #
+        # # send params to play func
+        # self.play_sound(start_pos_ms)
 
 
         #
@@ -127,8 +127,8 @@ class Robot(): # smooths the data as a thread class
         start_pos = (((incoming - -1) * ((poss_length * 1000) - 0)) / (1 - -1)) + 0
 
         # tidy up extremes to avoid SIGKILL errors
-        if start_pos > poss_length * 1000:
-            start_pos = poss_length * 1000 - 1000
+        if start_pos > poss_length:
+            start_pos = poss_length - 1000
         if start_pos < 0:
             start_pos = 0
         print (f'incoming = {incoming},  poss length = {poss_length} start position from new calc = {start_pos}')
@@ -139,10 +139,11 @@ class Robot(): # smooths the data as a thread class
 if __name__ == '__main__':
     bot = Robot()
 
-    # calc rate of change random 30 * 15 in ms
-    data_density = (randrange(30) + 1) * 15
-    print(f'F data density in ms = {data_density}')
+    while True:
+        # calc rate of change random 30 * 15 in ms
+        data_density = (randrange(30) + 1) * 15
+        print(f'F data density in ms = {data_density}')
 
-    bot.robot(data_density)
+        bot.robot(data_density)
 
-    time.sleep(data_density/ 1000)
+        time.sleep(data_density/ 1000)

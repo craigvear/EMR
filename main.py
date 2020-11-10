@@ -179,7 +179,6 @@ class DatasetEngine():
         config.z_ds = active_line[2]
         # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
 
-
     def is_loop(self):
         # determines if the parsing is to be looped
         looped = random.randrange(10)
@@ -234,7 +233,9 @@ class DatasetEngine():
         while running:
             # send the data to smoothing
             self.affect.smooth()
-            # time.sleep(0.02)
+
+            # smooth rate = 20 ms
+            time.sleep(0.02)
 
     def robot(self):
         """ get output from smoothing pass to wheels, make a sound"""
@@ -247,15 +248,19 @@ class DatasetEngine():
             # is instantaious as is sound
             self.bot.robot(data_density)
 
-            # hold mix until affect bang or end of cycle
-            for _ in range(data_density * 100):
-                # break if loud sound affects flow
-                if self.affect_interrupt:
-                    break
-                # break if medium sound affects flow
-                elif self.mix_interrupt:
-                    break
-                time.sleep(0.01)
+            print('===================================   pauseing instead of playing sound =====================')
+
+            # # hold mix until affect bang or end of cycle
+            # for _ in range(data_density):
+            #     # break if loud sound affects flow
+            #     if self.affect_interrupt:
+            #         break
+            #     # break if medium sound affects flow
+            #     elif self.mix_interrupt:
+            #         break
+            #     time.sleep(0.01)
+
+            time.sleep(data_density/ 1000)
 
     def affect_listening(self):
         time.sleep(1)
@@ -334,5 +339,6 @@ if __name__ == '__main__':
             p2 = executor.submit(dse.dataset_read)
             p3 = executor.submit(dse.mlpredictions)
             p4 = executor.submit(dse.affect_listening)
-            p5 = executor.submit(dse.affect_mixing)
-            p6 = executor.submit(dse.robot)
+            p5 = executor.submit(dse.smooth_output)
+            p6 = executor.submit(dse.affect_mixing)
+            p7 = executor.submit(dse.robot)

@@ -15,11 +15,7 @@ class Affect():
         self.left_raw_data_from_affect_mix = 0
 
     def smooth(self):
-        """smooths the output frm the mixer"""
-        # todo ignoring this for now.
-        # slide time of 20 ms
-        slide = 0.02
-
+        """smooths the output from the mixer"""
         # grabs current wheel settings from config
         current_l = config.left_wheel_move_from_smoothing
         current_r = config.right_wheel_move_from_smoothing
@@ -34,31 +30,15 @@ class Affect():
         # smoothing algo from Max/MSP slide object
         # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
 
-        # split the delta w/ noi
-        increment_value_l = (target_l - current_l) / 20
-        increment_value_r = (target_r - current_r) / 20
-        # print (f'smoothing inc = {increment_value_l}')
+        # split the delta
+        increment_value_l = target_l - current_l / 20
+        increment_value_r = target_r - current_r / 20
+        # print (f' inc = {increment_value_l}')
 
-        # smooth outputs
-        for _ in range(int(20)):
-            # output result to config
-            config.left_wheel_move_from_smoothing = current_l + increment_value_l
-            config.right_wheel_move_from_smoothing = current_r + increment_value_r
+        # output result back out to config
+        config.left_wheel_move_from_smoothing = current_l + increment_value_l
+        config.right_wheel_move_from_smoothing = current_r + increment_value_r
 
-            if config.affect_interrupt:
-                time.sleep(0.1)
-                break
-
-            else:
-                time.sleep(slide)
-
-        # print(f'E1 smoothing {current_l},   {current_r}')
-
-
-        # # define a division rhythm for increments this cycle
-        # _factor = randrange(1, 20)
-        # division_factor = _factor * randrange(10)
-        # print('div factor', division_factor)
 
     def mixing(self):
         # randomly mixes the data streams to the smoothing/wheels
