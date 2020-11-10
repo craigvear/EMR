@@ -21,8 +21,8 @@ class Affect():
         current_r = config.right_wheel_move_from_smoothing
 
         # grabs output from mixer
-        target_r = self.right_raw_data_from_affect_mix
-        target_l = self.left_raw_data_from_affect_mix
+        target_r = config.right_raw_data_from_affect_mix
+        target_l = config.left_raw_data_from_affect_mix
 
         # number of intervals
         # noi = slide / 10
@@ -31,8 +31,8 @@ class Affect():
         # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
 
         # split the delta
-        increment_value_l = target_l - current_l / 20
-        increment_value_r = target_r - current_r / 20
+        increment_value_l = (target_l - current_l) / 20
+        increment_value_r = (target_r - current_r) / 20
         # print (f' inc = {increment_value_l}')
 
         # output result back out to config
@@ -74,3 +74,18 @@ class Affect():
 
         # # create a pause to avoid multiple bangs
         # time.sleep(0.1)
+
+
+if __name__ == '__main__':
+
+    bot = Affect()
+
+    while True:
+        config.left_raw_data_from_affect_mix = randrange(-100, 100)/ 100
+        config.right_raw_data_from_affect_mix = randrange(-100, 100)/ 100
+
+        print('random  are ', config.left_raw_data_from_affect_mix, config.right_raw_data_from_affect_mix)
+        bot.smooth()
+
+        print('configs are ', config.left_wheel_move_from_smoothing, config.right_wheel_move_from_smoothing)
+        time.sleep(1)

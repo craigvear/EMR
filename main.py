@@ -241,14 +241,14 @@ class DatasetEngine():
         """ get output from smoothing pass to wheels, make a sound"""
         while running:
             # calc rate of change random 30 * 15 in ms
-            data_density = random.randrange(30) * 15
+            data_density = ((random.randrange(30) + 1) * 15) # / 1000
             print(f'F data density in ms = {data_density}')
 
             # move robot and make sound using these configs
             # is instantaious as is sound
             self.bot.robot(data_density)
 
-            print('===================================   pauseing instead of playing sound =====================')
+            print('=================================== playing sound =====================')
 
             # # hold mix until affect bang or end of cycle
             # for _ in range(data_density):
@@ -260,7 +260,7 @@ class DatasetEngine():
             #         break
             #     time.sleep(0.01)
 
-            time.sleep(data_density/ 1000)
+            time.sleep(data_density / 1000)
 
     def affect_listening(self):
         time.sleep(1)

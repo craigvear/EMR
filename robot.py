@@ -12,8 +12,8 @@ class Robot(): # smooths the data as a thread class
         # audio source variables
         audio_file = ('data/bill_evans_intro.mp3')
         self.audio = AudioSegment.from_mp3(audio_file)
-        self.audio_len = self.audio.duration_seconds
-        print('audio length (secs) = ', self.audio_len)
+        self.audio_len = self.audio.duration_seconds * 1000
+        print('audio length (ms) = ', self.audio_len)
         print("Roboting, baby")
 
         # temp moving vars
@@ -23,7 +23,8 @@ class Robot(): # smooths the data as a thread class
         self.old_right_sound = 0
 
     def robot(self, data_density):
-        self.data_density = data_density
+        # calc duration into ms from density
+        self.data_duration = data_density
 
         # calculate derivation in data for each wheel
         bot_move_left, bot_move_right = self.calc_deviation()
@@ -54,7 +55,7 @@ class Robot(): # smooths the data as a thread class
     def sound(self, bot_move_left, bot_move_right):
 
         # calc possible length of sample = audio length (secs) - interval (secs)
-        poss_length = int(self.audio_len - (self.data_density / 1000))
+        poss_length = int(self.audio_len - self.data_duration)
 
         # left wheel sounding
         # calc start position
@@ -63,12 +64,12 @@ class Robot(): # smooths the data as a thread class
         # send params to play func
         self.play_sound(start_pos_ms)
 
-        # # right wheel sounding
-        # # calc start position
-        # start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
-        #
-        # # send params to play func
-        # self.play_sound(start_pos_ms)
+        # right wheel sounding
+        # calc start position
+        start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
+
+        # send params to play func
+        self.play_sound(start_pos_ms)
 
 
         #
@@ -103,14 +104,14 @@ class Robot(): # smooths the data as a thread class
 
     def play_sound(self, start_pos):
         # adds a bit of overlap with audio threading
-        dur_ms = self.data_density # + 100
+        dur_ms = self.data_duration # + 100
         end_pos_ms = start_pos + dur_ms
         print('play params = ', start_pos, dur_ms, end_pos_ms)
 
         if end_pos_ms > self.audio_len * 1000:
             end_pos_ms = self.audio_len * 1000 - 100
 
-        # concats slicing data
+        # concats slicing datain ms
         audio_slice = self.audio[start_pos: end_pos_ms]
 
         # plays audio
@@ -124,7 +125,10 @@ class Robot(): # smooths the data as a thread class
 
     def calc_start_point(self, incoming, poss_length):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        start_pos = (((incoming - -1) * ((poss_length * 1000) - 0)) / (1 - -1)) + 0
+
+        # poss_length_ms = poss_length * 1000
+
+        start_pos = (((incoming - -1) * ((poss_length) - 0)) / (1 - -1)) + 0
 
         # tidy up extremes to avoid SIGKILL errors
         if start_pos > poss_length:
