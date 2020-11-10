@@ -31,7 +31,7 @@ df.columns = col_name
 df = df[df['freq'] < 2500]
 #  OPTIONAL C) only "body" data
 df = df[df['limb'] == '/Body']
-df = df.filter(['x', 'y', 'z']) # just the operational data
+df = df.filter(['x', 'y', 'z', 'amp']) # just the operational data
 
 dataset = df.values # just the values
 print (dataset)
@@ -49,8 +49,8 @@ def create_dataset(dataset, n_future=1, n_past=1):
 
     for i in range (n_past, len(dataset)-n_past-1):
         # for num in range(n_past):
-        x_train.append(dataset[i-1]) # incoming array
-        y_train.append(dataset[i]) # linked to output prediction
+        x_train.append(dataset[i][:-1]) # incoming array
+        y_train.append(dataset[i][:3]) # linked to output prediction
         # print(x_train, y_train)
     x_train, y_train = np.array(x_train), np.array(y_train)
     print(x_train.shape[0])

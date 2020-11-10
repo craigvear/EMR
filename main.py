@@ -269,16 +269,16 @@ class DatasetEngine():
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
                         frames_per_buffer=CHUNK)
-        random_probability = 0.3
+        random_probability = 0.4
 
         while running:
             data = np.frombuffer(self.stream.read(CHUNK), dtype=np.int16)
-            peak = np.average(np.abs(data)) * 2
+            self.peak = np.average(np.abs(data)) * 2
             # bars = "#" * int(50 * peak / 2 ** 16)
             # print("%05d %s" % (peak, bars))
 
             # interrupts processes if medium sound affects (routing matrix only)
-            if 4000 < peak < 8000:
+            if 4000 < self.peak < 8000:
                 self.mix_interrupt = True
                 print('##############################    MIX INTERRUPT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
@@ -287,7 +287,7 @@ class DatasetEngine():
 
             # interrupts processes if loud sound affects
             # (routing matrix and main dataset file selection (new train of thought))
-            elif random.random() > random_probability and peak > 8001:
+            elif random.random() > random_probability and self.peak > 8001:
                 self.affect_interrupt = True
                 config.affect_interrupt = True
                 print('##############################    AFFECT BANG  ###########################')
@@ -297,6 +297,10 @@ class DatasetEngine():
                 config.affect_interrupt = False
 
         self.snd_listen_terminate()
+
+    def ml_amp(self):
+        amp_in = self.peak
+        ml_amp_pred = self.ml.ml_amp_predictions(amp_in)
 
     def snd_listen_terminate(self):
         self.stream.stop_stream()
@@ -342,3 +346,4 @@ if __name__ == '__main__':
             p5 = executor.submit(dse.smooth_output)
             p6 = executor.submit(dse.affect_mixing)
             p7 = executor.submit(dse.robot)
+            p8 = executor.submit(dse.ml_amp)

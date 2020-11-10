@@ -42,7 +42,7 @@ class Affect():
 
     def mixing(self):
         # randomly mixes the data streams to the smoothing/wheels
-        left_out = randrange(6)
+        left_out = randrange(9)
         if left_out == 0:
             config.left_raw_data_from_affect_mix = config.x_ds
         elif left_out == 1:
@@ -53,11 +53,17 @@ class Affect():
             config.left_raw_data_from_affect_mix = config.x_ml
         elif left_out == 4:
             config.left_raw_data_from_affect_mix = config.y_ml
+        elif left_out == 5:
+            config.left_raw_data_from_affect_mix = config.z_ds
+        elif left_out == 6:
+            config.left_raw_data_from_affect_mix = config.x_ml_live
+        elif left_out == 7:
+            config.left_raw_data_from_affect_mix = config.y_ml_live
         else:
-            config.left_raw_data_from_affect_mix = config.z_ml
+            config.left_raw_data_from_affect_mix = config.z_ml_live
         print('Left matrix out is ', left_out)
 
-        right_out = randrange(6)
+        right_out = randrange(9)
         if right_out == 0:
             config.right_raw_data_from_affect_mix = config.x_ds
         elif right_out == 1:
@@ -68,8 +74,14 @@ class Affect():
             config.right_raw_data_from_affect_mix = config.x_ml
         elif right_out == 4:
             config.right_raw_data_from_affect_mix = config.y_ml
+        elif left_out == 5:
+            config.right_raw_data_from_affect_mix = config.z_ds
+        elif left_out == 6:
+            config.right_raw_data_from_affect_mix = config.x_ml_live
+        elif left_out == 7:
+            config.right_raw_data_from_affect_mix = config.y_ml_live
         else:
-            config.right_raw_data_from_affect_mix = config.z_ml
+            config.right_raw_data_from_affect_mix = config.z_ml_live
         print('Right matrix out is ', right_out)
 
         # # create a pause to avoid multiple bangs

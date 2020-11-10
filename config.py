@@ -13,6 +13,11 @@ x_ml = 0.5
 y_ml = 0.5
 z_ml = 0.5
 
+# variable for ML live parsig
+x_ml_live = 0.5
+y_ml_live = 0.5
+z_ml_live = 0.5
+
 # variables for motor movement
 right_raw_data_from_affect_mix = 0.5
 left_raw_data_from_affect_mix = 0.5
