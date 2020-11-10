@@ -5,14 +5,58 @@ This changes the mix and sends flags for change
 
 from random import randrange
 import config
-from time import sleep
+import time
 
 class Affect():
     def __init__(self):
         print('affect object init')
 
-    def mixing(self):
+    def smooth(self):
+        """smooths the output frm the mixer"""
 
+        # variables
+        # slide time of 20 ms
+        slide = 0.02
+
+        # working params
+        current_l = config.left_wheel_move_from_smoothing
+        target_l = self.left_raw_data_from_affect_mix
+        current_r = config.right_wheel_move_from_smoothing
+        target_r = self.right_raw_data_from_affect_mix
+
+        # number of intervals
+        noi = slide / 10
+
+        # smoothing algo from Max/MSP slide object
+        # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
+
+        # split the delta w/ noi
+        increment_value_l = (target_l - current_l) / noi
+        increment_value_r = (target_r - current_r) / noi
+        print (f'smoothing inc = {increment_value_l}')
+
+        # smooth outputs
+        for _ in range(int(noi)):
+            current_l += increment_value_l
+            current_r += increment_value_r
+
+            # wheel movement = adjusted value
+            config.left_wheel_move_from_smoothing = current_l
+            config.right_wheel_move_from_smoothing = current_r
+
+            if config.affect_interrupt:
+                time.sleep(0.1)
+                break
+
+        # print(f'E1 smoothing {current_l},   {current_r}')
+
+
+        # # define a division rhythm for increments this cycle
+        # _factor = randrange(1, 20)
+        # division_factor = _factor * randrange(10)
+        # print('div factor', division_factor)
+
+    def mixing(self):
         # randomly mixes the data streams to the smoothing/wheels
         left_out = randrange(6)
         if left_out == 0:
@@ -45,4 +89,4 @@ class Affect():
         print('Right matrix out is ', right_out)
 
         # create a pause to avoid multiple bangs
-        sleep(0.1)
+        time.sleep(0.1)

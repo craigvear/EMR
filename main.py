@@ -87,7 +87,7 @@ class DatasetEngine():
             self.local_data_list = self.data_list
 
             # set a random duration for reading from random line
-            dataset_read_dur = (random.randrange(3000, 13000)/ 1000)
+            dataset_read_dur = (random.randrange(3000, 13000) / 1000)
 
             # prepare start line to read
             starting_line = self.line_to_read()
@@ -229,19 +229,34 @@ class DatasetEngine():
         now_time = time.time()
         return now_time + duration
 
-    def roboting(self):
-        """smooths output from raw data generation.
-        Calcs differences. Moves robot. Makes sound"""
-        # if an affect flag happens this will break cycle
+    def smooth_output(self):
+        """smooths output from raw data generation"""
         while running:
-            # how long we going to smooth at this rate?
-            smoothing_dur = random.randrange(150, 1300) / 100
+            # send the data to smoothing
+            self.affect.smooth()
+            time.sleep(0.02)
 
-            # endtime calc
-            end_time = self.end_time_calc(smoothing_dur)
+    def robot(self):
+        """ get output from smoothing pass to wheels, make a sound"""
+        while running:
+            # calc rate of change random 30 * 15
+            data_density = random.randrange(450) / 1000
 
-            # send the data to smoothing and robot move
-            self.bot.smooth(smoothing_dur, end_time)
+            # move robot and make sound using these configs
+            # as they pour out of smoothing futures
+            # config.left_wheel_move_from_smoothing
+            # config.right_wheel_move_from_smoothing
+            self.bot.robot(data_density)
+
+            # hold mix until affect bang or end of cycle
+            for _ in range(int(data_density) * 100):
+                # break if loud sound affects flow
+                if self.affect_interrupt:
+                    break
+                # break if medium sound affects flow
+                elif self.mix_interrupt:
+                    break
+                time.sleep(0.01)
 
     def affect_listening(self):
         time.sleep(1)
@@ -319,4 +334,5 @@ if __name__ == '__main__':
             p3 = executor.submit(dse.mlpredictions)
             p4 = executor.submit(dse.affect_listening)
             p5 = executor.submit(dse.affect_mixing)
-            # p6 = executor.submit(dse.roboting)
+            # p6 = executor.submit(dse.smooth_output)
+            p7 = executor.submit(dse.robot)

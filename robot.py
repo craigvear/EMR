@@ -22,51 +22,53 @@ class Robot(): # smooths the data as a thread class
         self.old_right = 0
         self.old_right_sound = 0
 
-    def smooth(self, smoothing_dur, end_time):
-        # define a division rhythm for increments this cycle
-        _factor = randrange(1, 20)
-        division_factor = _factor * randrange(10)
-        print('div factor', division_factor)
+    # def smooth(self, smoothing_dur, end_time):
+    #     # define a division rhythm for increments this cycle
+    #     _factor = randrange(1, 20)
+    #     division_factor = _factor * randrange(10)
+    #     print('div factor', division_factor)
+    #
+    #     # slide between them at bang_timer ms per step
+    #     while time.time() < end_time:
+    #         # smoothing algo from Max/MSP slide object
+    #         # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
+    #
+    #         current_l = config.left_wheel_move_from_smoothing
+    #         target_l = config.left_raw_data_from_affect_mix
+    #         current_r = config.right_wheel_move_from_smoothing
+    #         target_r = config.right_raw_data_from_affect_mix
+    #
+    #         duration = smoothing_dur
+    #         self.interval = duration / division_factor
+    #
+    #         # number of increments
+    #         noi = duration / self.interval
+    #         print(f'interval  {self.interval}, noi = {noi}')
+    #
+    #         # split the delta w/ noi
+    #         increment_value_l = (target_l - current_l) / noi
+    #         increment_value_r = (target_r - current_r) / noi
+    #
+    #         # smooth outputs
+    #         for _ in range(int(noi)):
+    #             current_l += increment_value_l
+    #             current_r += increment_value_r
+    #             print(f'smoothing {current_l},   {current_r}')
+    #
+    #             # wheel movement = adjsted value
+    #             config.left_wheel_move_from_smoothing = current_l
+    #             config.right_wheel_move_from_smoothing = current_r
+    #
+    #             # make the robot move and sound
+    #             self.robot()
+    #
+    #             if config.affect_interrupt:
+    #                 time.sleep(0.1)
+    #                 break
 
-        # slide between them at bang_timer ms per step
-        while time.time() < end_time:
-            # smoothing algo from Max/MSP slide object
-            # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
+    def robot(self, data_density):
+        self.interval = data_density
 
-            current_l = config.left_wheel_move_from_smoothing
-            target_l = config.left_raw_data_from_affect_mix
-            current_r = config.right_wheel_move_from_smoothing
-            target_r = config.right_raw_data_from_affect_mix
-
-            duration = smoothing_dur
-            self.interval = duration / division_factor
-
-            # number of increments
-            noi = duration / self.interval
-            print(f'interval  {self.interval}, noi = {noi}')
-
-            # split the delta w/ noi
-            increment_value_l = (target_l - current_l) / noi
-            increment_value_r = (target_r - current_r) / noi
-
-            # smooth outputs
-            for _ in range(int(noi)):
-                current_l += increment_value_l
-                current_r += increment_value_r
-                print(f'smoothing {current_l},   {current_r}')
-
-                # wheel movement = adjsted value
-                config.left_wheel_move_from_smoothing = current_l
-                config.right_wheel_move_from_smoothing = current_r
-
-                # make the robot move and sound
-                self.robot()
-
-                if config.affect_interrupt:
-                    time.sleep(0.1)
-                    break
-
-    def robot(self):
         # calculate derivation in data for each wheel
         bot_move_left, bot_move_right = self.calc_deviation()
 
@@ -76,8 +78,8 @@ class Robot(): # smooths the data as a thread class
 
     def calc_deviation(self):
         # sets up temp vars for current params
-        left = config.left_wheel_move_from_smoothing
-        right = config.right_wheel_move_from_smoothing
+        left = config.left_raw_data_from_affect_mix
+        right = config.right_raw_data_from_affect_mix
 
         # subtracts new from old and difference = wheel move
         bot_move_left = left - self.old_left
@@ -92,8 +94,8 @@ class Robot(): # smooths the data as a thread class
     def sound(self, bot_move_left, bot_move_right):
         # round incoming numbers to 3 dp
         print(f'incoming wheel data = {bot_move_left},   {bot_move_left}')
-        bot_move_left_round = round(bot_move_left, 4)
-        bot_move_right_round = round(bot_move_right, 4)
+        bot_move_left_round = round(bot_move_left, 3)
+        bot_move_right_round = round(bot_move_right, 3)
         # print (bot_move_left, bot_move_right)
         poss_length = int(self.audio_len - (self.interval))
 
