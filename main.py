@@ -234,22 +234,21 @@ class DatasetEngine():
         while running:
             # send the data to smoothing
             self.affect.smooth()
-            time.sleep(0.02)
+            # time.sleep(0.02)
 
     def robot(self):
         """ get output from smoothing pass to wheels, make a sound"""
         while running:
-            # calc rate of change random 30 * 15
-            data_density = random.randrange(450) / 1000
+            # calc rate of change random 30 * 15 in ms
+            data_density = random.randrange(30) * 15
+            print(f'F data density in ms = {data_density}')
 
             # move robot and make sound using these configs
-            # as they pour out of smoothing futures
-            # config.left_wheel_move_from_smoothing
-            # config.right_wheel_move_from_smoothing
+            # is instantaious as is sound
             self.bot.robot(data_density)
 
             # hold mix until affect bang or end of cycle
-            for _ in range(int(data_density) * 100):
+            for _ in range(data_density * 100):
                 # break if loud sound affects flow
                 if self.affect_interrupt:
                     break
@@ -274,7 +273,7 @@ class DatasetEngine():
             # print("%05d %s" % (peak, bars))
 
             # interrupts processes if medium sound affects (routing matrix only)
-            if 6000 < peak < 10000:
+            if 4000 < peak < 8000:
                 self.mix_interrupt = True
                 print('##############################    MIX INTERRUPT BANG  ###########################')
                 # hold bang for 0.02 so all waits catch it (which are 0.01!!)
@@ -283,7 +282,7 @@ class DatasetEngine():
 
             # interrupts processes if loud sound affects
             # (routing matrix and main dataset file selection (new train of thought))
-            elif random.random() > random_probability and peak > 10001:
+            elif random.random() > random_probability and peak > 8001:
                 self.affect_interrupt = True
                 config.affect_interrupt = True
                 print('##############################    AFFECT BANG  ###########################')
@@ -307,15 +306,17 @@ class DatasetEngine():
 
             # how long to stay in a mix 1 - 4 seconds
             rnd_timing = (random.randrange(1000, 4000) / 1000)
-            print (rnd_timing, (int(rnd_timing * 100)))
+            print('E - affect mixing', rnd_timing, (int(rnd_timing * 100)))
 
             # hold mix until affect bang or end of cycle
             for _ in range(int(rnd_timing) * 100):
                 # break if loud sound affects flow
                 if self.affect_interrupt:
+                    time.sleep(0.1)
                     break
                 # break if medium sound affects flow
                 elif self.mix_interrupt:
+                    time.sleep(0.1)
                     break
                 time.sleep(0.01)
 
@@ -334,5 +335,4 @@ if __name__ == '__main__':
             p3 = executor.submit(dse.mlpredictions)
             p4 = executor.submit(dse.affect_listening)
             p5 = executor.submit(dse.affect_mixing)
-            # p6 = executor.submit(dse.smooth_output)
-            p7 = executor.submit(dse.robot)
+            p6 = executor.submit(dse.robot)

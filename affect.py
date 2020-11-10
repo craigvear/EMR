@@ -10,43 +10,47 @@ import time
 class Affect():
     def __init__(self):
         print('affect object init')
+        # intiates object variables
+        self.right_raw_data_from_affect_mix = 0
+        self.left_raw_data_from_affect_mix = 0
 
     def smooth(self):
         """smooths the output frm the mixer"""
-
-        # variables
+        # todo ignoring this for now.
         # slide time of 20 ms
         slide = 0.02
 
-        # working params
+        # grabs current wheel settings from config
         current_l = config.left_wheel_move_from_smoothing
-        target_l = self.left_raw_data_from_affect_mix
         current_r = config.right_wheel_move_from_smoothing
+
+        # grabs output from mixer
         target_r = self.right_raw_data_from_affect_mix
+        target_l = self.left_raw_data_from_affect_mix
 
         # number of intervals
-        noi = slide / 10
+        # noi = slide / 10
 
         # smoothing algo from Max/MSP slide object
         # y(n) = y(n - 1) + ((x(n) - y(n - 1)) / slide)
 
         # split the delta w/ noi
-        increment_value_l = (target_l - current_l) / noi
-        increment_value_r = (target_r - current_r) / noi
-        print (f'smoothing inc = {increment_value_l}')
+        increment_value_l = (target_l - current_l) / 20
+        increment_value_r = (target_r - current_r) / 20
+        # print (f'smoothing inc = {increment_value_l}')
 
         # smooth outputs
-        for _ in range(int(noi)):
-            current_l += increment_value_l
-            current_r += increment_value_r
-
-            # wheel movement = adjusted value
-            config.left_wheel_move_from_smoothing = current_l
-            config.right_wheel_move_from_smoothing = current_r
+        for _ in range(int(20)):
+            # output result to config
+            config.left_wheel_move_from_smoothing = current_l + increment_value_l
+            config.right_wheel_move_from_smoothing = current_r + increment_value_r
 
             if config.affect_interrupt:
                 time.sleep(0.1)
                 break
+
+            else:
+                time.sleep(slide)
 
         # print(f'E1 smoothing {current_l},   {current_r}')
 
@@ -88,5 +92,5 @@ class Affect():
             config.right_raw_data_from_affect_mix = config.z_ml
         print('Right matrix out is ', right_out)
 
-        # create a pause to avoid multiple bangs
-        time.sleep(0.1)
+        # # create a pause to avoid multiple bangs
+        # time.sleep(0.1)
