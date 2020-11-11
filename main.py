@@ -240,27 +240,28 @@ class DatasetEngine():
     def robot(self):
         """ get output from smoothing pass to wheels, make a sound"""
         while running:
-            # calc rate of change random 30 * 15 in ms
-            data_density = ((random.randrange(30) + 1) * 15) # / 1000
-            print(f'F data density in ms = {data_density}')
+            for _ in range(random.randrange(6)):
+                # calc rate of change random
+                data_density = (random.randrange(10, 1300)) # / 1000
+                print(f'F data density in ms = {data_density}')
 
-            # move robot and make sound using these configs
-            # is instantaious as is sound
-            self.bot.robot(data_density)
+                # move robot and make sound using these configs
+                # is instantaious as is sound
+                self.bot.robot(data_density)
 
-            print('=================================== playing sound =====================')
+                print('=================================== playing sound =====================')
 
-            # # hold mix until affect bang or end of cycle
-            # for _ in range(data_density):
-            #     # break if loud sound affects flow
-            #     if self.affect_interrupt:
-            #         break
-            #     # break if medium sound affects flow
-            #     elif self.mix_interrupt:
-            #         break
-            #     time.sleep(0.01)
+                # # hold mix until affect bang or end of cycle
+                # for _ in range(data_density):
+                #     # break if loud sound affects flow
+                #     if self.affect_interrupt:
+                #         break
+                #     # break if medium sound affects flow
+                #     elif self.mix_interrupt:
+                #         break
+                #     time.sleep(0.01)
 
-            time.sleep(data_density / 1000)
+                time.sleep(data_density / 1000)
 
     def affect_listening(self):
         time.sleep(1)

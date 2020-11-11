@@ -53,6 +53,9 @@ class Robot(): # smooths the data as a thread class
         return bot_move_left, bot_move_right
 
     def sound(self, bot_move_left, bot_move_right):
+        # round incoming values
+        bot_move_left = round(bot_move_left, 3)
+        bot_move_right = round(bot_move_right, 3)
 
         # calc possible length of sample = audio length (secs) - interval (secs)
         poss_length = int(self.audio_len - self.data_duration)
