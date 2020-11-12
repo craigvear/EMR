@@ -1,5 +1,6 @@
 import time
 import config
+from glob import glob
 from random import randrange
 from pydub import AudioSegment
 from pydub.playback import _play_with_simpleaudio as play
@@ -10,10 +11,13 @@ takes the stored variables in config, and mixes then then smooths output
 class Robot(): # smooths the data as a thread class
     def __init__(self):
         # audio source variables
-        audio_file = ('data/bill_evans_intro.mp3')
-        self.audio = AudioSegment.from_mp3(audio_file)
-        self.audio_len = self.audio.duration_seconds * 1000
-        print('audio length (ms) = ', self.audio_len)
+        # audio_file = ('data/bill_evans_intro.mp3')
+        self.audio_path = glob('data/monk/*.wav')
+        self.num_samples = len(list(self.audio_path))
+        print('num of samples = ', self.num_samples)
+        # self.audio = AudioSegment.from_mp3(audio_file)
+        # self.audio_len = self.audio.duration_seconds * 1000
+        # print('audio length (ms) = ', self.audio_len)
         print("Roboting, baby")
 
         # temp moving vars
@@ -57,23 +61,37 @@ class Robot(): # smooths the data as a thread class
         bot_move_left = round(bot_move_left, 3)
         bot_move_right = round(bot_move_right, 3)
 
-        # calc possible length of sample = audio length (secs) - interval (secs)
-        poss_length = int(self.audio_len - self.data_duration)
+        # calc sample to play
+        snippet_l = int(self.calc_snippet(bot_move_left))
+        snippet_r = int(self.calc_snippet(bot_move_right))
 
-        # left wheel sounding
-        # calc start position
-        start_pos_ms = self.calc_start_point(bot_move_left, poss_length)
+        # play snippets
+        self.play_snippet(snippet_l)
+        self.play_snippet(snippet_r)
 
-        # send params to play func
-        self.play_sound(start_pos_ms)
 
-        # right wheel sounding
-        # calc start position
-        start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
 
-        # send params to play func
-        self.play_sound(start_pos_ms)
 
+        #
+        # # calc possible length of sample = audio length (secs) - interval (secs)
+        # poss_length = int(self.audio_len - self.data_duration)
+        #
+        # # left wheel sounding
+        # # calc start position
+        # start_pos_ms = self.calc_start_point(bot_move_left, poss_length)
+        #
+        # # send params to play func
+        # self.play_sound(start_pos_ms)
+        #
+        # # right wheel sounding
+        # # calc start position
+        # start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
+        #
+        # # send params to play func
+        # # play from single file
+        # self.play_sound(start_pos_ms)
+        #
+        #
 
         #
         #
@@ -105,26 +123,38 @@ class Robot(): # smooths the data as a thread class
         # wait because its using simple_audio which only starts play
         # time.sleep(self.interval)
 
-    def play_sound(self, start_pos):
-        # adds a bit of overlap with audio threading
-        dur_ms = self.data_duration # + 100
-        end_pos_ms = start_pos + dur_ms
-        print('play params = ', start_pos, dur_ms, end_pos_ms)
+    # def play_sound(self, start_pos):
+    #     # adds a bit of overlap with audio threading
+    #     dur_ms = self.data_duration # + 100
+    #     end_pos_ms = start_pos + dur_ms
+    #     print('play params = ', start_pos, dur_ms, end_pos_ms)
+    #
+    #     if end_pos_ms > self.audio_len * 1000:
+    #         end_pos_ms = self.audio_len * 1000 - 100
+    #
+    #     # concats slicing datain ms
+    #     audio_slice = self.audio[start_pos: end_pos_ms]
+    #
+    #     # plays audio
+    #     try:
+    #         play(audio_slice)
+    #     except:
+    #         print(f'################   error start pos {start_pos}, end pos {end_pos_ms}')
+    #
+    #     # # pause as its simpleaudio and only starts
+    #     # time.sleep(dur_ms / 1000)
 
-        if end_pos_ms > self.audio_len * 1000:
-            end_pos_ms = self.audio_len * 1000 - 100
+    # todo
+    def play_snippet(self, incoming_sample):
+        audio_file = self.audio_path[incoming_sample]
+        audio = AudioSegment.from_wav(audio_file)
+        print(f'################  PLAYING AUDIO {incoming_sample} ###########')
+        play(audio)
 
-        # concats slicing datain ms
-        audio_slice = self.audio[start_pos: end_pos_ms]
-
-        # plays audio
-        try:
-            play(audio_slice)
-        except:
-            print(f'################   error start pos {start_pos}, end pos {end_pos_ms}')
-
-        # # pause as its simpleaudio and only starts
-        # time.sleep(dur_ms / 1000)
+    def calc_snippet(self, incoming):
+        # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+        sample = (((incoming - -1) * ((self.num_samples) - 0)) / (1 - -1)) + 0
+        return sample
 
     def calc_start_point(self, incoming, poss_length):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
