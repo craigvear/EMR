@@ -144,16 +144,25 @@ class Robot(): # smooths the data as a thread class
     #     # # pause as its simpleaudio and only starts
     #     # time.sleep(dur_ms / 1000)
 
-    # todo
+
     def play_snippet(self, incoming_sample):
+        # tidy up extreme
+        if incoming_sample < 0:
+            incoming_sample = 0
+        elif incoming_sample > self.num_samples:
+            incoming_sample = self.num_samples
+
+        # grab sample from list
         audio_file = self.audio_path[incoming_sample]
+
+        # play sample
         audio = AudioSegment.from_wav(audio_file)
         print(f'################  PLAYING AUDIO {incoming_sample} ###########')
         play(audio)
 
     def calc_snippet(self, incoming):
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-        sample = (((incoming - -1) * ((self.num_samples) - 0)) / (1 - -1)) + 0
+        sample = (((incoming - -2) * ((self.num_samples) - 0)) / (2 - -2)) + 0
         return sample
 
     def calc_start_point(self, incoming, poss_length):
