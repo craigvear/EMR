@@ -200,11 +200,17 @@ class DatasetEngine():
     def smooth_output(self):
         """smooths output from raw data generation"""
         while running:
-            # send the data to smoothing
-            self.affect.smooth()
 
-            # smooth rate = 20 ms
-            time.sleep(0.02)
+            # calcs rate of smoothing as ms
+            smooth_rate = (random.randrange(30) * 15 * glob_density) / 1000
+            end_time_smooth = time.time() + smooth_rate
+
+            while time.time() < end_time_smooth:
+                # send the data to smoothing
+                self.affect.smooth()
+
+                # # smooth rate = 20 ms
+                time.sleep(smooth_rate/20)
 
     def robot(self):
         """ get output from smoothing pass to wheels, make a sound"""
@@ -219,16 +225,6 @@ class DatasetEngine():
                 self.bot.robot(data_density)
 
                 print('=================================== playing sound =====================')
-
-                # # hold mix until affect bang or end of cycle
-                # for _ in range(data_density):
-                #     # break if loud sound affects flow
-                #     if self.affect_interrupt:
-                #         break
-                #     # break if medium sound affects flow
-                #     elif self.mix_interrupt:
-                #         break
-                #     time.sleep(0.01)
 
                 time.sleep(data_density / 1000)
 
@@ -319,6 +315,8 @@ class DatasetEngine():
                 time.sleep(0.01)
 
 if __name__ == '__main__':
+    glob_density = 1
+
     # glob_density = input('what density rate (1 = normal)')
     # glob_speed = input('what global speed (1=normal)')
 
