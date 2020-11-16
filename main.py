@@ -148,17 +148,17 @@ class DatasetEngine():
         return start_line_read
 
     def parse_active_line(self, active_line):
-        temp_x_ds = (config.x_ds - active_line[0]) / 10
-        temp_y_ds = (config.y_ds - active_line[1]) / 10
-        temp_z_ds = (config.z_ds - active_line[2]) / 10
-        temp_freq_ds = (config.freq_ds - active_line[3]) / 10
-        temp_amp_ds = (config.amp_ds - active_line[4]) / 10
+        self.temp_x_ds = (config.x_ds - active_line[0]) / 10
+        self.temp_y_ds = (config.y_ds - active_line[1]) / 10
+        self.temp_z_ds = (config.z_ds - active_line[2]) / 10
+        self.temp_freq_ds = (config.freq_ds - active_line[3]) / 10
+        self.temp_amp_ds = (config.amp_ds - active_line[4]) / 10
 
-        config.x_ds = temp_x_ds
-        config.y_ds = temp_y_ds
-        config.z_ds = temp_z_ds
-        config.freq_ds = temp_freq_ds
-        config.amp_ds = temp_amp_ds
+        # config.x_ds = temp_x_ds
+        # config.y_ds = temp_y_ds
+        # config.z_ds = temp_z_ds
+        # config.freq_ds = temp_freq_ds
+        # config.amp_ds = temp_amp_ds
         # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
 
     def is_loop(self):
@@ -205,13 +205,13 @@ class DatasetEngine():
                 # wait for baudrate to cycle
 
     def parse_ML_line(self, active_line):
-        temp_x_ml = (config.x_ml - active_line[0]) / 10
-        temp_y_ml = (config.y_ml - active_line[1]) / 10
-        temp_z_ml = (config.z_ml - active_line[2]) / 10
+        self.temp_x_ml = (config.x_ml - active_line[0]) / 10
+        self.temp_y_ml = (config.y_ml - active_line[1]) / 10
+        self.temp_z_ml = (config.z_ml - active_line[2]) / 10
 
-        config.x_ml = temp_x_ml
-        config.y_ml = temp_y_ml
-        config.z_ml = temp_z_ml
+        # config.x_ml = temp_x_ml
+        # config.y_ml = temp_y_ml
+        # config.z_ml = temp_z_ml
 
 
     def end_time_calc(self, duration):
@@ -219,20 +219,27 @@ class DatasetEngine():
         now_time = time.time()
         return now_time + duration
 
-    def smooth_output(self):
-        """smooths output from raw data generation"""
+    def bang_output(self):
+        """controls the output streams from raw data generation"""
         while running:
 
             # calcs rate of smoothing as ms
-            smooth_rate = (random.randrange(30) * 15 * glob_density) / 1000
-            end_time_smooth = time.time() + smooth_rate
+            bang_rate = (random.randrange(100, 106) * 5 * glob_density) / 1000
+            bang_ms = (1 / bang_rate) * 1000
 
-            while time.time() < end_time_smooth:
-                # send the data to smoothing
-                self.affect.smooth()
+            # stamp current config data as operational robot data
 
-                # # smooth rate = 20 ms
-                time.sleep(smooth_rate/20)
+            config.x_ds = self.temp_x_ds
+            config.y_ds = self.temp_y_ds
+            config.z_ds = self.temp_z_ds
+            config.freq_ds = self.temp_freq_ds
+            config.amp_ds = self.temp_amp_ds
+
+            config.x_ml = self.temp_x_ml
+            config.y_ml = self.temp_y_ml
+            config.z_ml = self.temp_z_ml
+
+            time.sleep(bang_ms)
 
     def robot(self):
         """ get output from smoothing pass to wheels, make a sound"""
@@ -355,8 +362,8 @@ if __name__ == '__main__':
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
             p3 = executor.submit(dse.mlpredictions)
-            # p4 = executor.submit(dse.affect_listening)
-            # p5 = executor.submit(dse.smooth_output)
-            # p6 = executor.submit(dse.affect_mixing)
-            # p7 = executor.submit(dse.robot)
-            # p8 = executor.submit(dse.ml_amp)
+            p4 = executor.submit(dse.affect_listening)
+            p5 = executor.submit(dse.bang_output)
+            p6 = executor.submit(dse.affect_mixing)
+            p7 = executor.submit(dse.robot)
+            p8 = executor.submit(dse.ml_amp)
