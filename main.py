@@ -51,8 +51,8 @@ class DatasetEngine():
             self.data_list = self.dataparsing(dataset)
 
             # how long to read a dataset file for this cycle
-            dataset_choice_dur = (random.randrange(6000, 26000) / 1000)
-            # print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
+            dataset_choice_dur = (random.randrange(6000, 26000) / 1000) * glob_speed
+            print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
 
             # wait for this process to timeout 6-26 seconds
             # time.sleep(dataset_choice_dur)
@@ -76,7 +76,7 @@ class DatasetEngine():
 
                 # populate the working list
                 data_list.append(data)
-        # print('A3 converted dataset into float list')
+        print('A3 converted dataset into float list')
         return data_list
 
     def dataset_read(self):
@@ -87,7 +87,8 @@ class DatasetEngine():
             self.local_data_list = self.data_list
 
             # set a random duration for reading from random line
-            dataset_read_dur = (random.randrange(3000, 13000) / 1000)
+            # before choosing another from current set
+            dataset_read_dur = (random.randrange(3000, 13000) / 1000) * glob_speed
 
             # prepare start line to read
             starting_line = self.line_to_read()
@@ -100,7 +101,7 @@ class DatasetEngine():
             looped = self.is_loop()
 
             while time.time() < end_time:
-                # calc baudrate and cycle clock
+                # calc baudrate and cycle clock for speed of line read
                 baudrate = self.baudrate()
 
                 # if looped
@@ -116,19 +117,25 @@ class DatasetEngine():
                         self.parse_active_line(active_line)
                         line_to_read += 1
                         print(f'********  line to read {line_to_read}')
-                        time.sleep(baudrate)
+                        # print(f'config data = {config.x_ds}, {config.y_ds}, {config.z_ds}')
+
+                        # pause for 10th of baudrate, while parse_active_line slides
+                        time.sleep(baudrate/10)
                 else:
                     # if no loop
                     active_line = self.local_data_list[starting_line]
                     self.parse_active_line(active_line)
                     starting_line += 1
                     print(f'********  line to read {starting_line}')
-                    time.sleep(baudrate)
+                    # print(f'config data = {config.x_ds}, {config.y_ds}, {config.z_ds}')
+
+                    # pause for 10th of baudrate, while parse_active_line slides
+                    time.sleep(baudrate/10)
 
     def baudrate(self):
         # calculates the baudrate for reading 3-13 seconds
         # (shared by ds read and ml read)
-        return (random.randrange(300, 1300) / 1000)
+        return (random.randrange(300, 1300) / 1000) * glob_speed
 
     def line_to_read(self):
         # random line to start reading
@@ -137,15 +144,21 @@ class DatasetEngine():
         start_line_read = random.randrange(ds_len)
 
         # print out the details andf returns
-        # print(f'B2 dataset read start point for reading line {start_line_read}')
+        print(f'B2 dataset read start point for reading line {start_line_read}')
         return start_line_read
 
     def parse_active_line(self, active_line):
-        config.x_ds = active_line[0]
-        config.y_ds = active_line[1]
-        config.z_ds = active_line[2]
-        config.freq_ds = active_line[3]
-        config.amp_ds = active_line[4]
+        temp_x_ds = (config.x_ds - active_line[0]) / 10
+        temp_y_ds = (config.y_ds - active_line[1]) / 10
+        temp_z_ds = (config.z_ds - active_line[2]) / 10
+        temp_freq_ds = (config.freq_ds - active_line[3]) / 10
+        temp_amp_ds = (config.amp_ds - active_line[4]) / 10
+
+        config.x_ds = temp_x_ds
+        config.y_ds = temp_y_ds
+        config.z_ds = temp_z_ds
+        config.freq_ds = temp_freq_ds
+        config.amp_ds = temp_amp_ds
         # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
 
     def is_loop(self):
@@ -154,7 +167,7 @@ class DatasetEngine():
 
         # >= 5 =50% chance of looping
         if looped > 5:
-            loop_duration = random.randrange(5, 15) / 10
+            loop_duration = random.randrange(5, 15) / 10 * glob_speed
             # print("B5 loop duration = ", loop_duration)
             return loop_duration
         else:
@@ -166,7 +179,7 @@ class DatasetEngine():
         # if an affect flag happens this will break cycle
         while running:
             # set a random duration for reading from random line
-            ml_read_dur = (random.randrange(3000, 13000) / 1000)
+            ml_read_dur = (random.randrange(3000, 13000) / 1000) * glob_speed
             # predict_rate = self.baudrate()
 
             # print('C1 ml line read duration = ', ml_read_dur)
@@ -183,14 +196,23 @@ class DatasetEngine():
                 ml_predict = self.ml.ml_predictions(df_features)
                 print('C3 ml prediction = ', ml_predict)
 
-                # parse the result into config
-                config.x_ml = ml_predict[0]
-                config.y_ml = ml_predict[1]
-                config.z_ml = ml_predict[2]
+                for _ in range (10):
+                    # parse the result into config
+                    self.parse_ML_line(ml_predict)
+                    time.sleep(predict_rate / 10)
 
                 print('C4 config ml ', config.x_ml, config.y_ml, config.z_ml)
                 # wait for baudrate to cycle
-                time.sleep(predict_rate)
+
+    def parse_ML_line(self, active_line):
+        temp_x_ml = (config.x_ml - active_line[0]) / 10
+        temp_y_ml = (config.y_ml - active_line[1]) / 10
+        temp_z_ml = (config.z_ml - active_line[2]) / 10
+
+        config.x_ml = temp_x_ml
+        config.y_ml = temp_y_ml
+        config.z_ml = temp_z_ml
+
 
     def end_time_calc(self, duration):
         # returns the end time for loops
@@ -217,7 +239,7 @@ class DatasetEngine():
         while running:
             for _ in range(random.randrange(6)):
                 # calc rate of change random
-                data_density = (random.randrange(10, 1300)) # / 1000
+                data_density = (random.randrange(10, 1300)) * glob_speed # / 1000
                 print(f'F data density in ms = {data_density}')
 
                 # move robot and make sound using these configs
@@ -299,7 +321,7 @@ class DatasetEngine():
             self.affect.mixing()
 
             # how long to stay in a mix 1 - 4 seconds
-            rnd_timing = (random.randrange(1000, 4000) / 1000)
+            rnd_timing = (random.randrange(1000, 4000) / 1000) * glob_speed
             print('E - affect mixing', rnd_timing, (int(rnd_timing * 100)))
 
             # hold mix until affect bang or end of cycle
@@ -316,6 +338,7 @@ class DatasetEngine():
 
 if __name__ == '__main__':
     glob_density = 1
+    glob_speed = 1
 
     # glob_density = input('what density rate (1 = normal)')
     # glob_speed = input('what global speed (1=normal)')
@@ -332,8 +355,8 @@ if __name__ == '__main__':
             p1 = executor.submit(dse.dataset_choice)
             p2 = executor.submit(dse.dataset_read)
             p3 = executor.submit(dse.mlpredictions)
-            p4 = executor.submit(dse.affect_listening)
-            p5 = executor.submit(dse.smooth_output)
-            p6 = executor.submit(dse.affect_mixing)
-            p7 = executor.submit(dse.robot)
-            p8 = executor.submit(dse.ml_amp)
+            # p4 = executor.submit(dse.affect_listening)
+            # p5 = executor.submit(dse.smooth_output)
+            # p6 = executor.submit(dse.affect_mixing)
+            # p7 = executor.submit(dse.robot)
+            # p8 = executor.submit(dse.ml_amp)
