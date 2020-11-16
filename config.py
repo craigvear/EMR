@@ -7,6 +7,8 @@ affect_interrupt = False
 x_ds = 0.5
 y_ds = 0.5
 z_ds = 0.5
+freq_ds = 0.5
+amp_ds = 0.5
 
 # variable for ML parsing
 x_ml = 0.5

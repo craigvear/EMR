@@ -140,43 +140,12 @@ class DatasetEngine():
         # print(f'B2 dataset read start point for reading line {start_line_read}')
         return start_line_read
 
-    # def parse(self, parse_end_time, looped, starting_line, baudrate):
-    #     # starting line is
-    #     line_to_read = starting_line
-    #
-    #     # print out starting line and details
-    #     read_line = self.local_data_list[line_to_read]
-    #     # print(f'B3 reading line {read_line}, parse end time {parse_end_time} '
-    #     #       f'looped {looped}, baudrate {baudrate}')
-    #
-    #     # while the read set duration is active
-    #     while time.time() < parse_end_time:
-    #         # if looped
-    #         if looped > 0:
-    #             loop_end = time.time() + looped
-    #
-    #             # reset the start read point
-    #             line_to_read = starting_line
-    #
-    #             # for each loop
-    #             while time.time() < loop_end:
-    #                 active_line = self.local_data_list[line_to_read]
-    #                 self.parse_active_line(active_line)
-    #                 line_to_read += 1
-    #                 # print(f'********  line to read {line_to_read}')
-    #                 time.sleep(baudrate)
-    #         else:
-    #             # if no loop
-    #             active_line = self.local_data_list[line_to_read]
-    #             self.parse_active_line(active_line)
-    #             line_to_read += 1
-    #             # print(f'********  line to read {line_to_read}')
-    #             time.sleep(baudrate)
-
     def parse_active_line(self, active_line):
         config.x_ds = active_line[0]
         config.y_ds = active_line[1]
         config.z_ds = active_line[2]
+        config.freq_ds = active_line[3]
+        config.amp_ds = active_line[4]
         # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
 
     def is_loop(self):
@@ -273,29 +242,48 @@ class DatasetEngine():
         random_probability = 0.4
 
         while running:
-            data = np.frombuffer(self.stream.read(CHUNK), dtype=np.int16)
-            self.peak = np.average(np.abs(data)) * 2
-            # bars = "#" * int(50 * peak / 2 ** 16)
-            # print("%05d %s" % (peak, bars))
 
-            # interrupts processes if medium sound affects (routing matrix only)
-            if 4000 < self.peak < 8000:
-                self.mix_interrupt = True
-                print('##############################    MIX INTERRUPT BANG  ###########################')
-                # hold bang for 0.02 so all waits catch it (which are 0.01!!)
-                time.sleep(0.02)
-                self.mix_interrupt = False
+            # which amp channel to listen to? 1) live, 2) DS read, 3) random drunk poetry
+            amp_channel = random.randrange(3)
+            amp_channel_listen_duration = random.randrange(1000, 4000) / 1000
+            amp_listen_end_time = time.time() + amp_channel_listen_duration
 
-            # interrupts processes if loud sound affects
-            # (routing matrix and main dataset file selection (new train of thought))
-            elif random.random() > random_probability and self.peak > 8001:
-                self.affect_interrupt = True
-                config.affect_interrupt = True
-                print('##############################    AFFECT BANG  ###########################')
-                # hold bang for 0.02 so all waits catch it (which are 0.01!!)
-                time.sleep(0.02)
-                self.affect_interrupt = False
-                config.affect_interrupt = False
+            while time.time() < amp_listen_end_time:
+
+                # select listening
+                if amp_channel == 0:
+
+                    # then listen to the live mic
+                    data = np.frombuffer(self.stream.read(CHUNK), dtype=np.int16)
+                    # transform the output level to 0 - 100
+                    self.peak = (np.average(np.abs(data)) * 2) / 100
+
+                elif amp_channel ==1:
+                    # then grab data from config and transfomr to 0- 100
+                    self.peak = config.amp_ds * 100
+
+                else:
+                    self.peak = random.randrange(0, 100)
+
+
+                # interrupts processes if medium sound affects (routing matrix only)
+                if 40 < self.peak < 80:
+                    self.mix_interrupt = True
+                    print('##############################    MIX INTERRUPT BANG  ###########################')
+                    # hold bang for 0.02 so all waits catch it (which are 0.01!!)
+                    time.sleep(0.02)
+                    self.mix_interrupt = False
+
+                # interrupts processes if loud sound affects
+                # (routing matrix and main dataset file selection (new train of thought))
+                elif random.random() > random_probability and self.peak > 81:
+                    self.affect_interrupt = True
+                    config.affect_interrupt = True
+                    print('##############################    AFFECT BANG  ###########################')
+                    # hold bang for 0.02 so all waits catch it (which are 0.01!!)
+                    time.sleep(0.02)
+                    self.affect_interrupt = False
+                    config.affect_interrupt = False
 
         self.snd_listen_terminate()
 
@@ -331,6 +319,9 @@ class DatasetEngine():
                 time.sleep(0.01)
 
 if __name__ == '__main__':
+    # glob_density = input('what density rate (1 = normal)')
+    # glob_speed = input('what global speed (1=normal)')
+
     # instantiate the baudrate object
     dse = DatasetEngine()
 
