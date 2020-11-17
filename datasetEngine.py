@@ -8,8 +8,9 @@ class DataEngine():
     # setting up global vars
     dataset_list = glob.glob('dataset/*.csv')
 
-    # debug toggle
-    debug = False
+    # debug toggles
+    debug_choose = False
+    debug_read = False
 
     def __init__(self, glob_speed):
         print('dataset engine is GOOOO')
@@ -25,7 +26,7 @@ class DataEngine():
     def which_dataset(self):
         return random.choice(self.dataset_list)
 
-    def dataset_chooce(self):
+    def dataset_choice(self):
         """chooses a dataset file, parses into a list"""
         # while running:
 
@@ -38,7 +39,7 @@ class DataEngine():
 
         # how long to read a dataset file for this cycle
         dataset_choice_dur = (random.randrange(6000, 26000) / 1000) * self.glob_speed
-        if self.debug:
+        if self.debug_choose:
             print(f'A4 dataset choice duration = {dataset_choice_dur} seconds')
 
         # wait for this process to timeout 6-26 seconds
@@ -63,7 +64,7 @@ class DataEngine():
 
                 # populate the working list
                 data_list.append(data)
-        if self.debug:
+        if self.debug_choose:
             print('A3 converted dataset into float list')
         return data_list
 
@@ -82,7 +83,7 @@ class DataEngine():
         starting_line = self.line_to_read()
 
         # sorts out durations
-        if self.debug:
+        if self.debug_choose:
             print('B1 dataset line read duration = ', dataset_read_dur)
         end_time = self.end_time_calc(dataset_read_dur)
 
@@ -105,8 +106,8 @@ class DataEngine():
                     active_line = self.local_data_list[line_to_read]
                     self.parse_active_line(active_line)
                     line_to_read += 1
-                    if self.debug:
-                        print(f'********  line to read {line_to_read}')
+                    if self.debug_read:
+                        print(f'********  line to read LOOPING {line_to_read}')
                     # print(f'config data = {config.x_ds}, {config.y_ds}, {config.z_ds}')
 
                     # pause for 10th of baudrate, while parse_active_line slides
@@ -116,8 +117,8 @@ class DataEngine():
                 active_line = self.local_data_list[starting_line]
                 self.parse_active_line(active_line)
                 starting_line += 1
-                if self.debug:
-                    print(f'********  line to read {starting_line}')
+                if self.debug_read:
+                    print(f'********  line to read NO LOOP {starting_line}')
                 # print(f'config data = {config.x_ds}, {config.y_ds}, {config.z_ds}')
 
                 # pause for 10th of baudrate, while parse_active_line slides
@@ -135,23 +136,26 @@ class DataEngine():
         start_line_read = random.randrange(ds_len)
 
         # print out the details andf returns
-        if self.debug:
+        if self.debug_read:
             print(f'B2 dataset read start point for reading line {start_line_read}')
         return start_line_read
 
     def parse_active_line(self, active_line):
-        self.temp_x_ds = (config.x_ds - active_line[0]) / 10
-        self.temp_y_ds = (config.y_ds - active_line[1]) / 10
-        self.temp_z_ds = (config.z_ds - active_line[2]) / 10
-        self.temp_freq_ds = (config.freq_ds - active_line[3]) / 10
-        self.temp_amp_ds = (config.amp_ds - active_line[4]) / 10
+        config.temp_x_ds = (config.x_ds - active_line[0]) / 10
+        config.temp_y_ds = (config.y_ds - active_line[1]) / 10
+        config.temp_z_ds = (config.z_ds - active_line[2]) / 10
+        config.temp_freq_ds = (config.freq_ds - active_line[3]) / 10
+        config.temp_amp_ds = (config.amp_ds - active_line[4]) / 10
 
         # config.x_ds = temp_x_ds
         # config.y_ds = temp_y_ds
         # config.z_ds = temp_z_ds
         # config.freq_ds = temp_freq_ds
         # config.amp_ds = temp_amp_ds
-        # print('B4 config ds ', config.x_ds, config.y_ds, config.z_ds)
+        if self.debug_read:
+            print('B4 config.temp ds ', config.temp_x_ds,
+                  config.temp_y_ds,
+                  config.temp_z_ds)
 
     def is_loop(self):
         # determines if the parsing is to be looped
@@ -165,3 +169,8 @@ class DataEngine():
         else:
             # print('B5 no loop')
             return 0
+
+    def end_time_calc(self, duration):
+        # returns the end time for loops
+        now_time = time.time()
+        return now_time + duration

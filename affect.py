@@ -8,9 +8,15 @@ import config
 import time
 
 class Affect():
-    def __init__(self):
+    # debug toggles
+    debug_mix = False
+    debug_listen = False
+
+    def __init__(self, glob_speed):
         print('affect object init')
-        # intiates object variables
+        self.glob_speed = glob_speed
+
+        # initiates object variables
         self.right_raw_data_from_affect_mix = 0
         self.left_raw_data_from_affect_mix = 0
 
@@ -39,7 +45,6 @@ class Affect():
         config.left_wheel_move_from_smoothing = current_l + increment_value_l
         config.right_wheel_move_from_smoothing = current_r + increment_value_r
 
-
     def mixing(self):
         # randomly mixes the data streams to the smoothing/wheels
         left_out = randrange(9)
@@ -61,7 +66,8 @@ class Affect():
             config.left_raw_data_from_affect_mix = config.y_ml_live
         else:
             config.left_raw_data_from_affect_mix = config.z_ml_live
-        print('Left matrix out is ', left_out)
+        if self.debug_mix:
+            print('Left matrix out is ', left_out)
 
         right_out = randrange(9)
         if right_out == 0:
@@ -82,10 +88,29 @@ class Affect():
             config.right_raw_data_from_affect_mix = config.y_ml_live
         else:
             config.right_raw_data_from_affect_mix = config.z_ml_live
-        print('Right matrix out is ', right_out)
+        if self.debug_mix:
+            print('Right matrix out is ', right_out)
 
-        # # create a pause to avoid multiple bangs
-        # time.sleep(0.1)
+
+    def mix_control(self):
+        # how long to stay in a mix 1 - 4 seconds
+        rnd_timing = (randrange(1000, 4000) / 1000) * self.glob_speed
+        if self.debug_listen:
+            print('E - affect mixing', rnd_timing, (int(rnd_timing * 100)))
+
+        # hold mix until affect bang or end of cycle
+        for _ in range(int(rnd_timing) * 100):
+            # break if loud sound affects flow
+            if config.affect_interrupt:
+                time.sleep(0.1)
+                break
+            # break if medium sound affects flow
+            elif config.mix_interrupt:
+                time.sleep(0.1)
+                break
+            time.sleep(0.01)
+
+
 
 
 if __name__ == '__main__':
