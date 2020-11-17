@@ -26,3 +26,6 @@ left_raw_data_from_affect_mix = 0.5
 left_wheel_move_from_smoothing = 0.5
 right_wheel_move_from_smoothing = 0.5
 
+# affect vars
+affect_interrupt = False
+mix_interrupt = False
