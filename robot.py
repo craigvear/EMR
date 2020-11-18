@@ -8,14 +8,14 @@ from pydub.playback import _play_with_simpleaudio as play
 takes the stored variables in config, and mixes then then smooths output
 """
 class Robot(): # smooths the data as a thread class
-    debug_robot = False
+    debug_robot = True
 
     def __init__(self, glob_density):
         self.glob_density = glob_density
 
         # audio source variables
-        audio_file = ('data/bill_evans_intro.mp3')
-        self.audio = AudioSegment.from_mp3(audio_file)
+        audio_file = ('data/hdi_bass_1.wav')
+        self.audio = AudioSegment.from_wav(audio_file)
         self.audio_len = self.audio.duration_seconds * 1000
         print('audio length (ms) = ', self.audio_len)
         print("Roboting, baby")
@@ -79,37 +79,6 @@ class Robot(): # smooths the data as a thread class
         # send params to play func
         self.play_sound(start_pos_ms_right)
 
-
-        #
-        #
-        # # if changes or not to number
-        # if bot_move_left_round == self.old_left_sound:
-        #     self.old_left_sound = bot_move_left_round
-        # else:
-        #     # calc start position
-        #     start_pos_ms = self.calc_start_point(bot_move_left, poss_length)
-        #
-        #     # send params to play func
-        #     self.play_sound(start_pos_ms)
-        #
-        #     # makes old value = new
-        #     self.old_left_sound = bot_move_left_round
-        #
-        # if bot_move_right_round == self.old_right_sound:
-        #     self.old_right_sound = bot_move_right_round
-        # else:
-        #     # calc start position
-        #     start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
-        #
-        #     # send params to play func
-        #     self.play_sound(start_pos_ms)
-        #
-        #     # makes old value = new
-        #     self.old_right_sound = bot_move_right_round
-
-        # wait because its using simple_audio which only starts play
-        # time.sleep(self.interval)
-
     def play_sound(self, start_pos):
         # adds a bit of overlap with audio threading
         dur_ms = self.data_duration # + 100
@@ -129,15 +98,12 @@ class Robot(): # smooths the data as a thread class
         except:
             print(f'################   error start pos {start_pos}, end pos {end_pos_ms}')
 
-        # # pause as its simpleaudio and only starts
-        # time.sleep(dur_ms / 1000)
 
     def calc_start_point(self, incoming, poss_length):
+        # new_value = ( (old_value - old_min) / (old_max - old_min) ) * (new_max - new_min) + new_min
+        start_pos = ( (incoming - -2) / (2 - -2) ) * (poss_length - 0) + 0
         # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-
-        # poss_length_ms = poss_length * 1000
-
-        start_pos = (((incoming - -2) * ((poss_length) - 0)) / (2 - -2)) + 0
+        # start_pos = (((incoming - -2) * (poss_length - 0)) / (2 - -2)) + 0
 
         # tidy up extremes to avoid SIGKILL errors
         if start_pos > poss_length:

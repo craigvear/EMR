@@ -10,6 +10,10 @@ from robot import Robot
 from ui import GUI
 from datasetEngine import DataEngine
 
+# todo: sort out deviation and smoothing at robot end
+# todo: GUI
+# todo: tf2 conflict on JetBot
+
 class Running():
     # debug toggles
     debug_report = False
@@ -52,7 +56,7 @@ class Running():
         """controls the output streams from raw data generation"""
         while running:
             # calcs rate of smoothing as ms
-            bang_rate = (random.randrange(15, 800) * glob_density) / 1000
+            bang_rate = (random.randrange(15, 1300) * glob_density) / 1000
             # bang_secs = (1 / bang_rate)
             if self.debug_report:
                 print ('bang outputs wait = ', bang_rate)
@@ -76,7 +80,7 @@ class Running():
         while running:
             for _ in range(random.randrange(6)):
                 # calc rate of change random
-                data_density = (random.randrange(20, 330)) * glob_density # / 1000
+                data_density = (random.randrange(20, 1300)) * glob_density # / 1000
                 if self.debug_robot:
                     print(f'F data density in ms = {data_density}')
 
@@ -90,10 +94,10 @@ class Running():
                 time.sleep(data_density / 1000)
 
     def affect_listening(self):
-        """leave this alone as a stanalone func to control sample time integrity"""
+        """leave this as a standalone func to control sample time integrity"""
         # time.sleep(1)
         CHUNK = 2 ** 11
-        RATE = 22050
+        RATE = 44100
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
                         frames_per_buffer=CHUNK)
@@ -194,8 +198,8 @@ class Running():
             self.dse.dataset_read()
 
 if __name__ == '__main__':
-    glob_density = 1
-    glob_speed = 1
+    glob_density = random.randrange(200, 2000) / 1000
+    glob_speed = random.randrange(200, 2000) / 1000
     running = True
 
     # instantiate the baudrate object
