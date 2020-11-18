@@ -53,7 +53,7 @@ class Affect():
 
     def mixing(self):
         # randomly mixes the data streams to the smoothing/wheels
-        left_out = randrange(9)
+        left_out = randrange(6) # todo reduced to exclude ml-live
         if left_out == 0:
             config.left_raw_data_from_affect_mix = config.x_ds
         elif left_out == 1:
@@ -75,7 +75,7 @@ class Affect():
         if self.debug_mix:
             print('Left matrix out is ', left_out)
 
-        right_out = randrange(9)
+        right_out = randrange(6) # todo reduced to exclude ml-live
         if right_out == 0:
             config.right_raw_data_from_affect_mix = config.x_ds
         elif right_out == 1:

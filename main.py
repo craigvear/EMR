@@ -163,6 +163,7 @@ class Running():
                     time.sleep(0.02)
                     config.affect_interrupt = False
 
+    # todo - abandoned for now as input shapes are wrong
     def ml_amp(self):
         while running:
             amp_in = self.peak / 300
@@ -206,30 +207,31 @@ if __name__ == '__main__':
     while running:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # randomly selects a dataset file to read (6-26 secs)
-            # p1 = executor.submit(go.dataset_choice)
+            p1 = executor.submit(go.dataset_choice)
 
             # picks a random start point in file and reads (3-13 secs)
-            # p2 = executor.submit(go.dataset_read)
+            p2 = executor.submit(go.dataset_read)
 
             # makes ML predictions from p2 input
-            # p3 = executor.submit(go.mlpredictions)
+            p3 = executor.submit(go.mlpredictions)
 
             # listens to live audio
             p4 = executor.submit(go.affect_listening)
 
             # chooses which listening
-            # p5 = executor.submit(go.choose_listening)
+            p5 = executor.submit(go.choose_listening)
 
             # bangs the mix output to the robot
-            # p6 = executor.submit(go.bang_output)
+            p6 = executor.submit(go.bang_output)
 
             # bangs and mixes outputs to the robot class
-            # p7 = executor.submit(go.affect_mixing)
+            p7 = executor.submit(go.affect_mixing)
 
             # controls the robot class
-            # p8 = executor.submit(go.robot)
+            p8 = executor.submit(go.robot)
 
+            # todo - abandoned for now as input shapes are wrong
             # generates an xyz response from NN using live mic
-            p9 = executor.submit(go.ml_amp)
+            # p9 = executor.submit(go.ml_amp)
 
             # p9 = executor.submit(dse.gui)

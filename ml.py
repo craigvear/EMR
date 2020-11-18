@@ -6,6 +6,7 @@ import config
 import time
 
 
+
 class Predictions():
     """will make predictions using RNN as both LSTM and audio_in"""
     # debug toggles
@@ -104,8 +105,12 @@ class Predictions():
         return (pred_x, pred_y, pred_z)
 
     def ml_amp_predictions(self, live_amp_in):
+        # convert to numpy array
+        input_features = array(live_amp_in)
+        print(input_features.shape)
+
         # reshapes array into 2 dimensions for tf predict
-        amp_inputX = reshape(live_amp_in, (live_amp_in.shape[0], live_amp_in.shape[1], 1))
+        amp_inputX = reshape(input_features, (input_features.shape[0], 1, 1))
 
         # makes a predictaion
         amp_pred = self.AMP_model.predict(amp_inputX, verbose=0)
@@ -139,3 +144,10 @@ class Predictions():
         # calculates the baudrate for reading 3-13 seconds
         # (shared by ds read and ml read)
         return (random.randrange(300, 1300) / 1000) * self.glob_speed
+
+
+if __name__ == '__main__':
+    pred = Predictions(1)
+    for peak in range (100):
+        data = pred.ml_amp_predictions(peak + 2)
+        print (data)
