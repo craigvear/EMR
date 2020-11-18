@@ -13,6 +13,7 @@ from datasetEngine import DataEngine
 # todo: sort out deviation and smoothing at robot end
 # todo: GUI
 # todo: tf2 conflict on JetBot
+# todo: wheel independence
 
 class Running():
     # debug toggles
@@ -185,9 +186,10 @@ class Running():
             # control
             self.affect.mix_control()
 
-    # def ui(self):
-    #     while running:
-    #         self.gui.updater
+    # todo - UI abandoned for now
+    def ui(self):
+        while running:
+            self.gui.updater()
 
     def dataset_choice(self):
         while running:
@@ -205,7 +207,7 @@ if __name__ == '__main__':
     # instantiate the baudrate object
     go = Running(glob_speed, glob_density)
 
-    # go.ml_amp()
+    # go.ui()
 
     # while the program is running
     while running:
@@ -238,4 +240,5 @@ if __name__ == '__main__':
             # generates an xyz response from NN using live mic
             # p9 = executor.submit(go.ml_amp)
 
-            # p9 = executor.submit(dse.gui)
+            # # controls UI
+            # p10 = executor.submit(go.ui)
