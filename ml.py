@@ -5,15 +5,10 @@ import random
 import config
 import time
 
-# setup initial params on calling
-BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-3in-3out_model.h5'
-BODY_model = tf.keras.models.load_model(BODY_model_path)
-
-AMP_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-AMPin-XYout_model.h5'
-AMP_model = tf.keras.models.load_model(AMP_model_path)
 
 class Predictions():
     """will make predictions using RNN as both LSTM and audio_in"""
+    # debug toggles
     debug_predict = False
     debug_parsing = False
 
@@ -21,6 +16,12 @@ class Predictions():
         # set up global variables
         print('ml ready')
         self.glob_speed = glob_speed
+        # setup initial params on calling
+        BODY_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-3in-3out_model.h5'
+        self.BODY_model = tf.keras.models.load_model(BODY_model_path)
+
+        AMP_model_path = 'training/models/LSTM_Bidirectional_64x4_no_lookback_200epochs-AMPin-XYout_model.h5'
+        self.AMP_model = tf.keras.models.load_model(AMP_model_path)
 
     def seed(self, data_list):
         # randomly generate a starting seed
@@ -88,7 +89,7 @@ class Predictions():
         inputX = reshape(row, (row.shape[0], row.shape[1], 1))
 
         # makes a prediction
-        pred = BODY_model.predict(inputX, verbose=0)
+        pred = self.BODY_model.predict(inputX, verbose=0)
         if self.debug_predict:
             print('C3 raw prediction = ', pred)
 
@@ -107,7 +108,7 @@ class Predictions():
         amp_inputX = reshape(live_amp_in, (live_amp_in.shape[0], live_amp_in.shape[1], 1))
 
         # makes a predictaion
-        amp_pred = AMP_model.predict(amp_inputX, verbose=0)
+        amp_pred = self.AMP_model.predict(amp_inputX, verbose=0)
 
         # parse the result into config
         config.x_ml_live = amp_pred[0, 0]

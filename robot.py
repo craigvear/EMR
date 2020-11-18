@@ -8,7 +8,11 @@ from pydub.playback import _play_with_simpleaudio as play
 takes the stored variables in config, and mixes then then smooths output
 """
 class Robot(): # smooths the data as a thread class
-    def __init__(self):
+    debug_robot = False
+
+    def __init__(self, glob_density):
+        self.glob_density = glob_density
+
         # audio source variables
         audio_file = ('data/bill_evans_intro.mp3')
         self.audio = AudioSegment.from_mp3(audio_file)
@@ -27,52 +31,53 @@ class Robot(): # smooths the data as a thread class
         self.data_duration = data_density
 
         # calculate derivation in data for each wheel
-        bot_move_left, bot_move_right = self.calc_deviation()
+        # bot_move_left, bot_move_right = self.calc_deviation()
 
         # # grabs raw data from config file
-        # bot_move_left = config.left_wheel_move_from_smoothing
-        # bot_move_right = config.right_wheel_move_from_smoothing
+        bot_move_left = config.left_raw_data_from_affect_mix
+        bot_move_right = config.right_raw_data_from_affect_mix
 
         # robot.set_motors(bot_move_left, bot_move_right)
-        print('moving robot', bot_move_left, bot_move_right)
+        if self.debug_robot:
+            print('moving robot', bot_move_left, bot_move_right)
         self.sound(bot_move_left, bot_move_right)
 
-    def calc_deviation(self):
-        # sets up temp vars for current params
-        left = config.left_wheel_move_from_smoothing
-        right = config.right_wheel_move_from_smoothing
-
-        # subtracts new from old and difference = wheel move
-        bot_move_left = left - self.old_left
-        bot_move_right = right - self.old_right
-
-        # make old vars the current move vars
-        config.old_left = bot_move_left
-        config.old_right = bot_move_right
-
-        return bot_move_left, bot_move_right
+    # def calc_deviation(self):
+    #     # sets up temp vars for current params
+    #     left = config.left_wheel_move_from_smoothing
+    #     right = config.right_wheel_move_from_smoothing
+    #
+    #     # subtracts new from old and difference = wheel move
+    #     bot_move_left = left - self.old_left
+    #     bot_move_right = right - self.old_right
+    #
+    #     # make old vars the current move vars
+    #     config.old_left = bot_move_left
+    #     config.old_right = bot_move_right
+    #
+    #     return bot_move_left, bot_move_right
 
     def sound(self, bot_move_left, bot_move_right):
         # round incoming values
-        bot_move_left = round(bot_move_left, 3)
-        bot_move_right = round(bot_move_right, 3)
+        # bot_move_left = round(bot_move_left, 3)
+        # bot_move_right = round(bot_move_right, 3)
 
         # calc possible length of sample = audio length (secs) - interval (secs)
         poss_length = int(self.audio_len - self.data_duration)
 
         # left wheel sounding
         # calc start position
-        start_pos_ms = self.calc_start_point(bot_move_left, poss_length)
+        start_pos_ms_left = self.calc_start_point(bot_move_left, poss_length)
 
         # send params to play func
-        self.play_sound(start_pos_ms)
+        self.play_sound(start_pos_ms_left)
 
         # right wheel sounding
         # calc start position
-        start_pos_ms = self.calc_start_point(bot_move_right, poss_length)
+        start_pos_ms_right = self.calc_start_point(bot_move_right, poss_length)
 
         # send params to play func
-        self.play_sound(start_pos_ms)
+        self.play_sound(start_pos_ms_right)
 
 
         #
@@ -108,8 +113,9 @@ class Robot(): # smooths the data as a thread class
     def play_sound(self, start_pos):
         # adds a bit of overlap with audio threading
         dur_ms = self.data_duration # + 100
-        end_pos_ms = start_pos + dur_ms
-        print('play params = ', start_pos, dur_ms, end_pos_ms)
+        end_pos_ms = start_pos + (dur_ms / randrange(1, 10))
+        if self.debug_robot:
+            print('play params = ', start_pos, dur_ms, end_pos_ms)
 
         if end_pos_ms > self.audio_len * 1000:
             end_pos_ms = self.audio_len * 1000 - 100
@@ -131,14 +137,15 @@ class Robot(): # smooths the data as a thread class
 
         # poss_length_ms = poss_length * 1000
 
-        start_pos = (((incoming - -1) * ((poss_length) - 0)) / (1 - -1)) + 0
+        start_pos = (((incoming - -2) * ((poss_length) - 0)) / (2 - -2)) + 0
 
         # tidy up extremes to avoid SIGKILL errors
         if start_pos > poss_length:
             start_pos = poss_length - 1000
         if start_pos < 0:
             start_pos = 0
-        print (f'incoming = {incoming},  poss length = {poss_length} start position from new calc = {start_pos}')
+        if self.debug_robot:
+            print (f'incoming = {incoming},  poss length = {poss_length} start position from new calc = {start_pos}')
         return start_pos
 
 

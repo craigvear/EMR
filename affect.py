@@ -20,6 +20,12 @@ class Affect():
         self.right_raw_data_from_affect_mix = 0
         self.left_raw_data_from_affect_mix = 0
 
+        # self.CHUNK = 2 ** 11
+        # self.RATE = 11025
+        # self.p = pyaudio.PyAudio()
+        # self.stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=self.RATE, input=True,
+        #                           frames_per_buffer=self.CHUNK)
+
     def smooth(self):
         """smooths the output from the mixer"""
         # grabs current wheel settings from config
@@ -110,19 +116,48 @@ class Affect():
                 break
             time.sleep(0.01)
 
+    # def listening(self):
+    #     data = np.frombuffer(self.stream.read(self.CHUNK), dtype=np.int16)
+    #     # transform the output level to 0 - 100
+    #     peak = (np.average(np.abs(data)) * 2) / 100
+    #     if self.debug_listen:
+    #         print('peak level = ', peak)
+    #     return peak
 
+    # def snd_listen_terminate(self):
+    #     self.stream.stop_stream()
+    #     self.stream.close()
+    #     self.p.terminate()
 
+    def bang_mix_out(self):
+        config.x_ds = config.temp_x_ds
+        config.y_ds = config.temp_y_ds
+        config.z_ds = config.temp_z_ds
+        config.freq_ds = config.temp_freq_ds
+        config.amp_ds = config.temp_amp_ds
+
+        config.x_ml = config.temp_x_ml
+        config.y_ml = config.temp_y_ml
+        config.z_ml = config.temp_z_ml
+        if self.debug_mix:
+            print('BANGED MIX OUTPUTS')
 
 if __name__ == '__main__':
 
-    bot = Affect()
+    bot = Affect(1)
 
     while True:
-        config.left_raw_data_from_affect_mix = randrange(-100, 100)/ 100
-        config.right_raw_data_from_affect_mix = randrange(-100, 100)/ 100
+        peak = bot.listening()
+        print(peak)
 
-        print('random  are ', config.left_raw_data_from_affect_mix, config.right_raw_data_from_affect_mix)
-        bot.smooth()
 
-        print('configs are ', config.left_wheel_move_from_smoothing, config.right_wheel_move_from_smoothing)
-        time.sleep(1)
+
+
+        # config.left_raw_data_from_affect_mix = randrange(-100, 100)/ 100
+        # config.right_raw_data_from_affect_mix = randrange(-100, 100)/ 100
+        #
+        # print('random  are ', config.left_raw_data_from_affect_mix, config.right_raw_data_from_affect_mix)
+        # bot.smooth()
+        #
+        # print('configs are ', config.left_wheel_move_from_smoothing, config.right_wheel_move_from_smoothing)
+        # time.sleep(1)
