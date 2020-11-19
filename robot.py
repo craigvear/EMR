@@ -10,25 +10,24 @@ takes the stored variables in config, and mixes then then smooths output
 class Robot(): # smooths the data as a thread class
     debug_robot = False
 
-    def __init__(self, wheel, glob_density):
-        self.wheel = wheel
+    def __init__(self, glob_density):
         self.glob_density = glob_density
-        if self.wheel == 'left':
-            self.instrument = 'bass'
-        else:
-            self.instrument = 'piano'
+        # if self.wheel == 'left':
+        self.instrument = 'bass'
+        # else:
+        #     self.instrument = 'piano'
 
         # audio source variables
-        if self.wheel == 'left':
-            self.audio_file = ('data/misha_lacy_off_minor.wav')
-        elif self.wheel == 'right':
-            self.audio_file = ('data/hdi_bass_1.wav')
+        # if self.wheel == 'left':
+        self.audio_file = ('data/misha_lacy_off_minor.wav')
+        # elif self.wheel == 'right':
+        #     self.audio_file = ('data/hdi_bass_1.wav')
 
         self.audio = AudioSegment.from_wav(self.audio_file)
         self.audio_len = self.audio.duration_seconds * 1000
         print('audio length  (ms) = ', self.audio_len)
 
-        print("Roboting, baby", self.wheel, self.instrument)
+        print("Roboting, baby", self.instrument)
 
         # # temp moving vars
         # self.old_left = 0
@@ -44,14 +43,14 @@ class Robot(): # smooths the data as a thread class
         # bot_move_left, bot_move_right = self.calc_deviation()
 
         # # grabs raw data from config file
-        if self.wheel == 'left':
-            self.bot_move_wheel = config.left_raw_data_from_affect_mix
-        elif self.wheel == 'right':
-            self.bot_move_wheel = config.right_raw_data_from_affect_mix
+        # if self.wheel == 'left':
+        self.bot_move_wheel = config.left_raw_data_from_affect_mix
+        # elif self.wheel == 'right':
+        #     self.bot_move_wheel = config.right_raw_data_from_affect_mix
 
         # robot.set_motors(bot_move_left, bot_move_right)
         if self.debug_robot:
-            print('moving robot', self.wheel, self.bot_move_wheel)
+            print('moving robot', self.bot_move_wheel)
         self.sound(self.bot_move_wheel)
 
     # def calc_deviation(self):
