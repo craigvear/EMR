@@ -18,7 +18,7 @@ from datasetEngine import DataEngine
 class Running():
     # debug toggles
     debug_report = False
-    debug_robot = False
+    debug_robot = True
 
     # conductor for the macro timings for ds read
     def __init__(self, glob_speed, glob_density):
@@ -37,8 +37,9 @@ class Running():
         # set up affect and mixing
         self.affect = Affect(self.glob_speed)
 
-        # setup robot moving and sounding
-        self.bot = Robot(self.glob_density)
+        # setup robot 4 moving and sounding
+        self.bot_left = Robot('left', self.glob_density)
+        self.bot_right = Robot('right', self.glob_density)
 
         # # setup GUI
         # self.gui = GUI()
@@ -76,21 +77,44 @@ class Running():
 
             time.sleep(bang_rate)
 
-    def robot(self):
+    def robot_left(self):
         """ get output from smoothing pass to wheels, make a sound"""
         while running:
             for _ in range(random.randrange(6)):
                 # calc rate of change random
-                data_density = (random.randrange(20, 1300)) * glob_density # / 1000
+                data_density = (random.randrange(20, 300)) * glob_density # / 1000
                 if self.debug_robot:
                     print(f'F data density in ms = {data_density}')
 
                 # move robot and make sound using these configs
                 # is instantaious as is sound
-                self.bot.robot(data_density)
+                self.bot_left.robot(data_density)
+                # else:
+                #     self.bot_right.robot(data_density, wheel)
 
                 if self.debug_robot:
-                    print('=================================== playing sound =====================')
+                    print('=================================== playing sound LEFT =====================')
+
+                time.sleep(data_density / 1000)
+
+    def robot_right(self):
+        """ get output from smoothing pass to wheels, make a sound"""
+        while running:
+            for _ in range(random.randrange(6)):
+                # calc rate of change random
+                data_density = (random.randrange(20, 300)) * glob_density # / 1000
+                if self.debug_robot:
+                    print(f'F data density in ms = {data_density}')
+
+                # move robot and make sound using these configs
+                # is instantaious as is sound
+                self.bot_right.robot(data_density)
+
+                # else:
+                #     self.bot_right.robot(data_density, wheel)
+
+                if self.debug_robot:
+                    print('=================================== playing sound RIGHT =====================')
 
                 time.sleep(data_density / 1000)
 
@@ -207,7 +231,7 @@ if __name__ == '__main__':
     # instantiate the baudrate object
     go = Running(glob_speed, glob_density)
 
-    # go.ui()
+    # go.robot('left')
 
     # while the program is running
     while running:
@@ -233,8 +257,11 @@ if __name__ == '__main__':
             # bangs and mixes outputs to the robot class
             p7 = executor.submit(go.affect_mixing)
 
-            # controls the robot class
-            p8 = executor.submit(go.robot)
+            # controls the robot class LEFT wheel
+            p8 = executor.submit(go.robot_left)
+
+            # controls the robot class RIGHT wheel
+            p9 = executor.submit(go.robot_right)
 
             # todo - abandoned for now as input shapes are wrong
             # generates an xyz response from NN using live mic

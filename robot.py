@@ -8,27 +8,33 @@ from pydub.playback import _play_with_simpleaudio as play
 takes the stored variables in config, and mixes then then smooths output
 """
 class Robot(): # smooths the data as a thread class
-    debug_robot = True
+    debug_robot = False
 
-    def __init__(self, glob_density):
+    def __init__(self, wheel, glob_density):
+        self.wheel = wheel
         self.glob_density = glob_density
+        if self.wheel == 'left':
+            self.instrument = 'bass'
+        else:
+            self.instrument = 'piano'
 
         # audio source variables
-        audio_file_piano = ('data/misha_lacy_off_minor.wav')
-        audio_file_bass = ('data/hdi_bass_1.wav')
-        self.audio_bass = AudioSegment.from_wav(audio_file_bass)
-        self.audio_len_bass = self.audio_bass.duration_seconds * 1000
-        print('audio length bass (ms) = ', self.audio_len_bass)
-        self.audio_piano = AudioSegment.from_wav(audio_file_piano)
-        self.audio_len_piano = self.audio_piano.duration_seconds * 1000
-        print('audio length piano (ms) = ', self.audio_len_piano)
-        print("Roboting, baby")
+        if self.wheel == 'left':
+            audio_file = ('data/misha_lacy_off_minor.wav')
 
-        # temp moving vars
-        self.old_left = 0
-        self.old_left_sound = 0
-        self.old_right = 0
-        self.old_right_sound = 0
+        else:
+            audio_file = ('data/hdi_bass_1.wav')
+        self.audio = AudioSegment.from_wav(audio_file)
+        self.audio_len = self.audio.duration_seconds * 1000
+        print('audio length  (ms) = ', self.audio_len)
+
+        print("Roboting, baby", self.wheel, self.instrument)
+
+        # # temp moving vars
+        # self.old_left = 0
+        # self.old_left_sound = 0
+        # self.old_right = 0
+        # self.old_right_sound = 0
 
     def robot(self, data_density):
         # calc duration into ms from density
@@ -38,13 +44,15 @@ class Robot(): # smooths the data as a thread class
         # bot_move_left, bot_move_right = self.calc_deviation()
 
         # # grabs raw data from config file
-        bot_move_left = config.left_raw_data_from_affect_mix
-        bot_move_right = config.right_raw_data_from_affect_mix
+        if self.wheel == 'left':
+            bot_move_wheel = config.left_raw_data_from_affect_mix
+        else:
+            bot_move_wheel = config.right_raw_data_from_affect_mix
 
         # robot.set_motors(bot_move_left, bot_move_right)
         if self.debug_robot:
-            print('moving robot', bot_move_left, bot_move_right)
-        self.sound(bot_move_left, bot_move_right)
+            print('moving robot', self.wheel, bot_move_wheel)
+        self.sound(bot_move_wheel)
 
     # def calc_deviation(self):
     #     # sets up temp vars for current params
@@ -61,45 +69,49 @@ class Robot(): # smooths the data as a thread class
     #
     #     return bot_move_left, bot_move_right
 
-    def sound(self, bot_move_left, bot_move_right):
+    def sound(self, bot_move_wheel):
         # round incoming values
         # bot_move_left = round(bot_move_left, 3)
         # bot_move_right = round(bot_move_right, 3)
 
         # calc possible length of sample = audio length (secs) - interval (secs)
-        poss_length_bass = int(self.audio_len_bass - self.data_duration)
-        poss_length_piano = int(self.audio_len_piano - self.data_duration)
-
+        # if self.wheel == 'left':
+        poss_length = int(self.audio_len - self.data_duration)
+        # else:
+        #     poss_length = int(self.audio_len_piano - self.data_duration)
 
         # left wheel sounding
         # calc start position
-        start_pos_ms_left = self.calc_start_point(bot_move_left, poss_length_bass)
+        start_pos_ms = self.calc_start_point(bot_move_wheel, poss_length)
 
         # send params to play func
-        self.play_sound('bass', start_pos_ms_left)
 
-        # right wheel sounding
-        # calc start position
-        start_pos_ms_right = self.calc_start_point(bot_move_right, poss_length_piano)
+        self.play_sound(start_pos_ms)
 
-        # send params to play func
-        self.play_sound('piano', start_pos_ms_right)
 
-    def play_sound(self, instrument, start_pos):
+
+        # # right wheel sounding
+        # # calc start position
+        # start_pos_ms_right = self.calc_start_point(bot_move_right, poss_length_piano)
+        #
+        # # send params to play func
+        # self.play_sound('piano', start_pos_ms_right)
+
+    def play_sound(self, start_pos):
         # adds a bit of overlap with audio threading
         dur_ms = self.data_duration # + 100
         end_pos_ms = start_pos + (dur_ms / randrange(1, 10))
         if self.debug_robot:
             print('play params = ', start_pos, dur_ms, end_pos_ms)
 
-        if end_pos_ms > self.audio_len_bass * 1000:
-            end_pos_ms = self.audio_len_bass * 1000 - 100
+        if end_pos_ms > self.audio_len * 1000:
+            end_pos_ms = self.audio_len * 1000 - 100
 
         # concats slicing data in ms
-        if instrument == 'bass':
-            audio_slice = self.audio_bass[start_pos: end_pos_ms]
-        else:
-            audio_slice = self.audio_piano[start_pos: end_pos_ms]
+        # if se /lf.instrument == 'bass':
+        audio_slice = self.audio[start_pos: end_pos_ms]
+        # else:
+        #     audio_slice = self.audio_piano[start_pos: end_pos_ms]
 
         # plays audio
         try:
@@ -126,7 +138,7 @@ class Robot(): # smooths the data as a thread class
 
 
 if __name__ == '__main__':
-    bot = Robot()
+    bot = Robot('left', 1)
 
     while True:
         # calc rate of change random 30 * 15 in ms
