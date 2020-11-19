@@ -58,7 +58,7 @@ class Running():
         """controls the output streams from raw data generation"""
         while running:
             # calcs rate of smoothing as ms
-            bang_rate = (random.randrange(15, 1300) * glob_density) / 1000
+            bang_rate = (random.randrange(150, 1300) * glob_density) / 1000
             # bang_secs = (1 / bang_rate)
             if self.debug_report:
                 print ('bang outputs wait = ', bang_rate)
@@ -77,46 +77,49 @@ class Running():
 
             time.sleep(bang_rate)
 
-    def robot_left(self):
+    def robot(self, wheel):
         """ get output from smoothing pass to wheels, make a sound"""
+        self.wheel = wheel
         while running:
             for _ in range(random.randrange(6)):
                 # calc rate of change random
-                data_density = (random.randrange(20, 300)) * glob_density # / 1000
+                self.data_density = (random.randrange(20, 300)) * glob_density # / 1000
                 if self.debug_robot:
-                    print(f'F data density in ms = {data_density}')
+                    print(f'F data density in ms = {self.data_density}')
 
                 # move robot and make sound using these configs
                 # is instantaious as is sound
-                self.bot_left.robot(data_density)
-                # else:
-                #     self.bot_right.robot(data_density, wheel)
+
+                if self.wheel == 'left':
+                    self.bot_left.robot_control(self.data_density)
+                elif self.wheel == 'right':
+                    self.bot_right.robot_control(self.data_density)
 
                 if self.debug_robot:
-                    print('=================================== playing sound LEFT =====================')
+                    print(f'=================================== playing sound {self.wheel} =====================')
 
-                time.sleep(data_density / 1000)
+                time.sleep(self.data_density / 1000)
 
-    def robot_right(self):
-        """ get output from smoothing pass to wheels, make a sound"""
-        while running:
-            for _ in range(random.randrange(6)):
-                # calc rate of change random
-                data_density = (random.randrange(20, 300)) * glob_density # / 1000
-                if self.debug_robot:
-                    print(f'F data density in ms = {data_density}')
-
-                # move robot and make sound using these configs
-                # is instantaious as is sound
-                self.bot_right.robot(data_density)
-
-                # else:
-                #     self.bot_right.robot(data_density, wheel)
-
-                if self.debug_robot:
-                    print('=================================== playing sound RIGHT =====================')
-
-                time.sleep(data_density / 1000)
+    # def robot_right(self):
+    #     """ get output from smoothing pass to wheels, make a sound"""
+    #     while running:
+    #         for _ in range(random.randrange(6)):
+    #             # calc rate of change random
+    #             data_density = (random.randrange(20, 300)) * glob_density # / 1000
+    #             if self.debug_robot:
+    #                 print(f'F data density in ms = {data_density}')
+    #
+    #             # move robot and make sound using these configs
+    #             # is instantaious as is sound
+    #             self.bot_right.robot(data_density)
+    #
+    #             # else:
+    #             #     self.bot_right.robot(data_density, wheel)
+    #
+    #             if self.debug_robot:
+    #                 print('=================================== playing sound RIGHT =====================')
+    #
+    #             time.sleep(data_density / 1000)
 
     def affect_listening(self):
         """leave this as a standalone func to control sample time integrity"""
@@ -258,10 +261,10 @@ if __name__ == '__main__':
             p7 = executor.submit(go.affect_mixing)
 
             # controls the robot class LEFT wheel
-            p8 = executor.submit(go.robot_left)
+            p8 = executor.submit(go.robot, 'left')
 
             # controls the robot class RIGHT wheel
-            p9 = executor.submit(go.robot_right)
+            p9 = executor.submit(go.robot, 'right')
 
             # todo - abandoned for now as input shapes are wrong
             # generates an xyz response from NN using live mic
